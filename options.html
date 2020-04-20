@@ -1,44 +1,23 @@
 <!DOCTYPE html>
 <html>
-  <head/>
+  <head>
+    <style>
+      button {
+        height: 50px;
+        width: 50px;
+        outline: none;
+        margin: 10px;
+        color = '#ffffff';
+        backgroundColor = '#9999ff';
+      }
+    </style>
+  </head>
   <body>
-    <div id="buttonDiv">
-    </div>
     <div>
       <p>Please put in your digital entertainment schedule for today! The list currently doesnt do anything, however.</p>
     </div>
-	<div>
-		<p> 09:00 - 12:00 </p>
-		<form>
-			<select name="dropdown">
-				<option value="Online gaming" selected>Vidya Gaem</option>
-				<option value="video streaming" selected>Netflix no chill</option>
-				<option value="audio streaming" selected>Stream Music</option>
-				<option value="page browsing" selected>Page Browsing</option>
-			</select>
-		</form>
-	</div>
-	<div>
-		<p> 12:00 - 18:00 </p>
-		<form>
-			<select name="dropdown">
-				<option value="Online gaming" selected>Vidya Gaem</option>
-				<option value="video streaming" selected>Netflix no chill</option>
-				<option value="audio streaming" selected>Stream Music</option>
-				<option value="page browsing" selected>Page Browsing</option>
-			</select>
-		</form>
-	</div>
-	<div>
-		<p> 18:00 - 00:00 </p>
-		<form>
-			<select name="dropdown">
-				<option value="Online gaming" selected>Vidya Gaem</option>
-				<option value="video streaming" selected>Netflix no chill</option>
-				<option value="audio streaming" selected>Stream Music</option>
-				<option value="page browsing" selected>Page Browsing</option>
-			</select>
-		</form>
-	</div>
+    <div id = "dropdownSection"></div>
+	<div id="buttonSubmit"></div>
+    <script type="module" src="options.js"></script>
   </body>
 </html>
