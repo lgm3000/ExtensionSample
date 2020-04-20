@@ -34,6 +34,7 @@ const refreshInterval = 0 /*mins*/ * 60 * 1000 +
 export {timeranges,leisureOptions};
 
 var weather = true;
+var activeType = "Unknown";
 
 // Displaying notification. Uses notification API
 function show(addText) {
@@ -79,7 +80,21 @@ chrome.runtime.onInstalled.addListener(function() {
   });
 });
 
+// Listener for active tab
+chrome.tabs.onActivated.addListener(function (tab) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        var activeTab = tabs[0];
+        //chrome.extension.getBackgroundPage().console.log(activeTab.url);
+        //chrome.extension.getBackgroundPage().console.log(activeTab.title);
+        var curtab = new URL(activeTab.url).hostname;
 
+        if(curtab in ["youtube.com","netflix.com"]){
+        	activeType = "video_streaming";
+        } else{
+        	activeType = "Unknown";
+        }
+    })
+});
 // Checks weather status every 3 seconds.
 // TODO: in reality interval should be longer (5-mins+), as this refresh is not (and should not be)
 // very time-sensitive.
@@ -89,6 +104,7 @@ setInterval(function(){
     // Pulling user planning from storage
     chrome.storage.sync.get('activity',function(data){
     	let tmp = data.activity.split(';');
+    	tmp.pop();
     	var plan = {};
         for (var item in tmp)
             plan[tmp[item].split(':')[0]] = tmp[item].split(':')[1];
@@ -103,8 +119,13 @@ setInterval(function(){
             			// TODO: we should be weighing activity imact against weather %.
             			// TODO: tracks your active tab & tries to identify if you're doing what you
             			// were supposed to do.
-
-                        //show('You shouldn\'t be doing ' + plan[time]);
+                        if (plan[time] == activeType) {
+                            show('You should change your plan from ' + plan[time] + ' to something eco-friendly!');	
+                        }
+                        else{
+                        	show('You shouldn\'t be doing ' + plan[time]);
+                        }
+                        
     	            }
                 }
     });
