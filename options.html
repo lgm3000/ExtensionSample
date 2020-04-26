@@ -1,23 +1,41 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <style>
-      button {
-        height: 50px;
-        width: 50px;
-        outline: none;
-        margin: 10px;
-        color = '#ffffff';
-        backgroundColor = '#9999ff';
-      }
-    </style>
-  </head>
-  <body>
-    <div>
-      <p>Please put in your digital entertainment schedule for today! The list currently doesnt do anything, however.</p>
-    </div>
-    <div id = "dropdownSection"></div>
-	<div id="buttonSubmit"></div>
-    <script type="module" src="options.js"></script>
-  </body>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Timetable template with CSS grid</title>
+	<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Karla'>
+	<link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="timetable">
+  <div id="week-names" class="week-names">
+    <div>monday</div>
+    <div>tuesday</div>
+    <div>wednesday</div>
+    <div>thursday</div>
+    <div>friday</div>
+    <div class="weekend">saturday</div>
+    <div class="weekend">sunday</div>
+  </div>
+  <div id="time-interval" class="time-interval">
+  </div>
+  <div id="content" class="content">
+  </div>
+</div>
+
+<div id="modal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span id="modal-close" class="close">&times;</span>
+    <p>Some text in the Modal..</p>
+  </div>
+
+</div>
+<!-- partial -->
+<script type="module" src="./options.js"></script>
+</body>
+
 </html>

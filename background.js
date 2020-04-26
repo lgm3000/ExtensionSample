@@ -10,25 +10,43 @@
 // the time needs to be in format HH:MM-HH:MM
 
 const timeranges = {
-  'morning':'09:00-12:00',
-  'afternoon':'12:00-18:00',
-  'evening':'18:00-23:59',
-  'early morning':'06:00-09:00'};
+  't1':'08:00-10:00',
+  't2':'10:00-12:00',
+  't3':'12:00-14:00',
+  't4':'14:00-16:00',
+  't5':'16:00-18:00',
+  't6':'18:00-20:00',
+  't7':'20:00-22:00',
+  't8':'22:00-23:59'
+  };
 
 // Defines the types of activities you can choose from throughout the day
 // currently it is defined in format 'backend name':'display name'
 // TODO: assign weights (based on environmental impact) to each activity
 
 const leisureOptions = {
+  'nothing':'Nothin\'',
   'online_gaming':'Vidya Gaem',
   'video_streaming':'Netflix no chill',
   'audio_streaming':'Stream Music',
-  'page browsing':'Page Browsing'};
+  'page_browsing':'Page Browsing'};
+
+const activityWeight = {
+  'other': 5,
+  'nothing': 0,
+  'online_gaming': 3,
+  'video_streaming': 10,
+  'audio_streaming':5,
+  'page browsing':2 };
 
 // define the refresh interval of weather-checking
 
 const refreshInterval = 0 /*mins*/ * 60 * 1000 +
-                        5 /*secs*/ * 1000;
+                        3 /*secs*/ * 1000;
+
+// define the constant coefficient used to calculate BEnv Score
+
+const BEnvA = 2;
                             
 /*****************************************************************************************/
 
@@ -37,7 +55,10 @@ export {timeranges,leisureOptions};
 var weather = true;
 var activeType = "Unknown";
 var actStack = new Array();
-var T = 0; // Behavior-offset Env. Impact Score (BEnv Score)
+var EnvImp = 0; // Env. Impact Score (BEnv Score)
+var BEnvImp = 0; // Behavior-offset Env. Impact Score (BEnv Score)
+
+export {EnvImp,BEnvImp};
 
 /*****************************************************************************************/
 // Notification zone
@@ -67,17 +88,14 @@ function show(addText) {
 
 /*****************************************************************************************/
 // This function will be used to determine the weather which should affect energy source
-// currently the weather function returns boolean results.
-// TODO: the 'weather' should be a percentage.
+// returns an integer between 1 and 10.
 function getWeather(){
 	// Using RNG to generate weather changes - in the final version should be pulling
 	// actual data
-	var rnd = Math.random();
+	var rnd = Math.random() * 10;
 
-	if(rnd > 0.5)
-	    return true;
-	else
-	    return false;
+	//return Math.floor(rnd) + 1;
+	return 1;
 }
 
 function isBetween(timePeriod){
@@ -90,7 +108,7 @@ function isBetween(timePeriod){
 
 function getAct(arr){
 	var max = 0;
-	var res = '';
+	var res = null;
 	var rset = {};
 
 	for( var i = 0, total = arr.length; i < total; ++i ) {
@@ -145,21 +163,28 @@ chrome.tabs.onActivated.addListener(function (tab) {
 setInterval(function(){
     // Pulling user planning from storage
     chrome.storage.sync.get('activity',function(data){
+    	let today = (new Date().getDay() + 6) % 7;
     	let tmp = data.activity.split(';');
-    	tmp.pop();
     	var plan = {};
-        for (var item in tmp)
-            plan[tmp[item].split(':')[0]] = tmp[item].split(':')[1];
+    	tmp.forEach(function(item){
+    		if(item.split(':')[0].split(',')[0]==today)
+    		    plan[item.split(':')[0].split(',')[1]] = item.split(':')[1];
+	    });	
         
         console.log(plan);
 
         // Maintaining the activity FIFO stack 
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            var curtab = new URL(tabs[0].url).hostname;
-            if(curtab == "www.youtube.com"){
-            	actStack.unshift("video_streaming");
-            } else{
-                actStack.unshift("other");
+        	try{
+                var curtab = new URL(tabs[0].url).hostname;
+                if(curtab == "www.youtube.com"){
+            	    actStack.unshift("video_streaming");
+                    } else{
+                    actStack.unshift("other");
+                    }
+        	}
+            catch(error){
+            	actStack.unshift("other");
             }
 
             if(actStack.length > 10){
@@ -167,27 +192,44 @@ setInterval(function(){
             }
         });
         activeType = getAct(actStack); 
-        console.log(actStack);
-        console.log(activeType);
+        //console.log(actStack);
+        //console.log(activeType);
 
 
     	for (var time in timeranges) 
-            if(timeranges.hasOwnProperty(time))
+            if(timeranges.hasOwnProperty(time)){
+
             	if (isBetween(timeranges[time])){
-            		console.log('current time is ' + time + ' ' + timeranges[time]);
-            		if(!getWeather()){
-            			// TODO: calculate the behaviour-offset Env. Impact score
-            			// TODO: calculate the behaviour assessment score
-            			// TODO: tracks your active tab & tries to identify if you're doing what you
-            			// were supposed to do.
-                        if (plan[time] == activeType) {
-                            //show('You should change your plan from ' + plan[time] + ' to something eco-friendly!');	
-                        }
-                        else{
-                        	//show('You shouldn\'t be doing ' + plan[time]);
-                        }
-                        
-    	            }
+            		//console.log('current time is ' + time + ' ' + timeranges[time]);
+
+                    if(activeType != null){
+						// Getting the weather weight
+						var weatherWeight = getWeather();
+						let p = activityWeight[plan[time]];
+						let q = activityWeight[activeType];
+
+						// Calculating the environmental impact score
+						EnvImp = EnvImp + q * weatherWeight
+
+						// Calculating the behaviour-offset Env. Impact score
+						BEnvImp = BEnvImp + ((p - q)>=0?0.02:-0.1) * (p - q + (plan[time] == activeType)) * (p - q + (plan[time] == activeType));
+
+						// TODO: calculate the behaviour assessment score
+						// TODO: tracks your active tab & tries to identify if you're doing what you
+						// were supposed to do.
+						console.log("current    plan: " + plan[time]);
+						console.log("active activity: " + activeType);
+						if (plan[time] == activeType) {
+							//show('You should change your plan from ' + plan[time] + ' to something eco-friendly!');	
+						}
+						else{
+							//show('You shouldn\'t be doing ' + plan[time]);
+						}
+
+						console.log(EnvImp);
+						console.log(BEnvImp);
+                    }
                 }
+            }
     });
 }, refreshInterval);
