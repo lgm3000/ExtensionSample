@@ -209,10 +209,11 @@ setInterval(function(){
 						let q = activityWeight[activeType];
 
 						// Calculating the environmental impact score
-						EnvImp = EnvImp + q * weatherWeight
+						EnvImp = EnvImp + q * weatherWeight;
 
 						// Calculating the behaviour-offset Env. Impact score
-						BEnvImp = BEnvImp + ((p - q)>=0?0.02:-0.1) * (p - q + (plan[time] == activeType)) * (p - q + (plan[time] == activeType));
+						BEnvImp = BEnvImp + 
+						    ((p - q)>=0?0.02:-0.1) * (p - q + (plan[time] == activeType)) * (p - q + (plan[time] == activeType));
 
 						// TODO: calculate the behaviour assessment score
 						// TODO: tracks your active tab & tries to identify if you're doing what you
