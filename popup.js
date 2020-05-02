@@ -3,14 +3,15 @@
 
 'use strict';
 
-import {EnvImp,BEnvImp} from './background.js';
+import {EnvImp,BEnvImp,getWeather} from './background.js';
 
-let changeColor = document.getElementById('changeColor');
+let icon = document.getElementById('icon');
 
-changeColor.style.backgroundColor = '#3aa757';
-			changeColor.setAttribute('value', '#3aa757'); 
+if(getWeather() > 5){
+    icon.innerHTML = '<img src="images/redWeather.png" />';
+} else{
+	icon.innerHTML = '<img src="images/greenWeather.png" />';
+}
 
-changeColor.onclick = function(element) {
-  EnvImp = 0;
-  BEnvImp = 0;
+icon.onclick = function(element) {
 };

@@ -4,6 +4,7 @@
   "description": "Build an Extension!",
   "permissions": ["tabs","activeTab", "declarativeContent", "storage","notifications"],
   "options_page": "options.html",
+
   "background": {
     "page": "background.html"
   },
@@ -24,6 +25,9 @@
   },
   "manifest_version": 2,
   "web_accessible_resources": [
-    "images/128.png"
+    "images/128.png",
+    "images/greenWeather.png",
+    "images/redWeather.png"
+
   ]
 }

@@ -19,7 +19,16 @@ const timeranges = {
   't7':'20:00-22:00',
   't8':'22:00-23:59'
   };
-
+  
+const dayOfWeek = {
+	'0': 'Monday',
+	'1': 'Tuesday',
+	'2': 'Wednesday',
+	'3': 'Thursday',
+	'4': 'Friday',
+	'5': 'Saturday',
+	'6': 'Sunday'
+}
 // Defines the types of activities you can choose from throughout the day
 // currently it is defined in format 'backend name':'display name'
 // TODO: assign weights (based on environmental impact) to each activity
@@ -50,13 +59,16 @@ const BEnvA = 2;
                             
 /*****************************************************************************************/
 
-export {timeranges,leisureOptions};
+export {timeranges,leisureOptions,dayOfWeek};
 
 var weather = true;
 var activeType = "Unknown";
 var actStack = new Array();
 var EnvImp = 0; // Env. Impact Score (BEnv Score)
 var BEnvImp = 0; // Behavior-offset Env. Impact Score (BEnv Score)
+var forecast = {};
+for(var i in dayOfWeek)
+	forecast[i] = {};
 
 export {EnvImp,BEnvImp};
 
@@ -87,16 +99,44 @@ function show(addText) {
 
 
 /*****************************************************************************************/
-// This function will be used to determine the weather which should affect energy source
-// returns an integer between 1 and 10.
-function getWeather(){
-	// Using RNG to generate weather changes - in the final version should be pulling
-	// actual data
-	var rnd = Math.random() * 10;
 
-	//return Math.floor(rnd) + 1;
-	return 1;
+// This function will be used to determine the weather which should affect energy source
+// Using RNG to generate weather changes - in the final version should be pulling
+// actual data
+function pullForecast(){
+	var sstr = "";
+	for (var dday in dayOfWeek)
+        for (var time in timeranges)
+            if(timeranges.hasOwnProperty(time)){
+                sstr = sstr + dday + ',' + time + ":" + (Math.floor(Math.random() * 10) + 1) + ";"
+            }
+	sstr = sstr.substring(0, sstr.length - 1);
+    chrome.storage.sync.set({'forecast': sstr}, function() {});
 }
+
+function getWeather(){
+	for (var time in timeranges)
+        if(timeranges.hasOwnProperty(time)){
+	        if (isBetween(timeranges[time])){
+	            return getForecast[time];
+	            }
+	    }
+}
+
+function getForecast(day,range){
+	chrome.storage.sync.get('forecast',function(data){
+    	let tmp = data.forecast.split(';');
+    	tmp.forEach(function(item){
+    		forecast[item.split(':')[0].split(',')[0]][item.split(':')[0].split(',')[1]] = item.split(':')[1];
+    	});
+    });
+    
+    if(forecast[day][range] == null)
+	    return forecast;
+	return forecast[day][range];
+}
+
+export {getWeather,getForecast};
 
 function isBetween(timePeriod){
     let startDate = Date.parse('01/01/2000 ' + timePeriod.split('-')[0] + ':00');
@@ -155,6 +195,15 @@ chrome.tabs.onActivated.addListener(function (tab) {
 });
 */
 
+//pullForecast();
+//console.log(getForecast());
+try{
+	getForecast();
+}
+catch(error){
+	pullForecast();
+}
+
 // Checks weather status every 3 seconds.
 // TODO: in reality interval should be longer (5-mins+), as this refresh is not (and should not be)
 // very time-sensitive.
@@ -171,7 +220,7 @@ setInterval(function(){
     		    plan[item.split(':')[0].split(',')[1]] = item.split(':')[1];
 	    });	
         
-        console.log(plan);
+        //console.log(plan);
 
         // Maintaining the activity FIFO stack 
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -218,17 +267,18 @@ setInterval(function(){
 						// TODO: calculate the behaviour assessment score
 						// TODO: tracks your active tab & tries to identify if you're doing what you
 						// were supposed to do.
-						console.log("current    plan: " + plan[time]);
-						console.log("active activity: " + activeType);
+						
+						//console.log("current    plan: " + plan[time]);
+						//console.log("active activity: " + activeType);
 						if (plan[time] == activeType) {
 							//show('You should change your plan from ' + plan[time] + ' to something eco-friendly!');	
 						}
 						else{
 							//show('You shouldn\'t be doing ' + plan[time]);
 						}
-
-						console.log(EnvImp);
-						console.log(BEnvImp);
+                        console.log(getForecast('0','t1'));
+						//console.log(EnvImp);
+						//console.log(BEnvImp);
                     }
                 }
             }
