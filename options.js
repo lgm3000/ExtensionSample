@@ -31,6 +31,8 @@ function refreshColors(){
 	for (var i = 0; i < children.length; i++) {
 		var contentChild = children[i];
 		if(arr[contentChild.getAttribute('att-day')][contentChild.getAttribute('att-time')]=="disabled"){
+			contentChild.className = "";
+			contentChild.classList.add("accent-empty");
 		    contentChild.classList.add("accent-disabled");
 		}
 		else{

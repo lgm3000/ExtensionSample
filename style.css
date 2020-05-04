@@ -15,7 +15,7 @@ html, body {
 }
 .forefront {
   position: fixed;
-  width: calc(80vw - 120px);
+  width: calc(80vw);
   height: calc(90vh - 60px);
   top: 60px;
   left:120px;
@@ -39,6 +39,7 @@ html, body {
   display: grid;  
   grid-template-rows: 60px repeat(8, 1fr);
   grid-template-columns: 120px 1fr;
+  transition: .3s;
 }
 .timetable .aside > header{
   display: -webkit-box;
@@ -50,6 +51,7 @@ html, body {
           justify-content: center;
   grid-column-start: 1;
   grid-column-end: 3;
+  transition: .3s;
 }
 .timetable .aside > div{
   display: -webkit-box;
@@ -59,6 +61,7 @@ html, body {
           align-items: center;
   -webkit-box-pack: center;
           justify-content: center;
+  transition: .3s;
 }
 .timetable .week-names {
   grid-area: week;

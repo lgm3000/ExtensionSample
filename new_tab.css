@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css?family=Orbitron');
+.clock {
+    position: absolute;
+    transform: translateX(-50%) translateY(-50%);
+    color: #FFFFFF;
+    font-size: 60px;
+    font-weight: bolder;
+    font-family: Orbitron;
+    letter-spacing: 8px;
+    transition: 0.4s;
+    user-select: none;
+}
+
+#maingrid {
+    display:grid;
+    grid-template-rows: 0.8fr 2.6fr 1fr 1fr;
+    height: 80vh;
+}
+
+#dspheader {
+    text-align: center;
+    margin:auto;
+
+}
+
+#dspgridgrid {
+    margin: auto auto;
+    display: grid;
+    width: 30%;
+    height: 100%;
+
+}
+#dspdesc {
+    margin: auto auto;
+    display:grid;
+    width: 50%;
+    height: 100%;
+}
+.dsprecommendations {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.dsprecommendations > div {
+    margin: auto auto;  
+    width: 90%;
+    height: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dsprecommendations > div > img {
+    display: block;
+    width: 40%;
+    height: auto;
+    user-select: none;
+}
+.dspcontent {
+  grid-area: content;
+  display: grid;
+  grid-template-rows: repeat(8, 1fr);
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.dspcontent > div {
+    margin: auto auto;  
+    box-shadow: inset 1px 0 0 #ECEFF1, inset 0 1px 0 0 #ECEFF1;
+    width: 75%;
+    height: 0;
+    padding-bottom:55%;
+}
+
+.accent-box {
+  display: -webkit-box;
+    border-radius:1em;
+    background: rgba(70, 70, 70, 0.1);
+    -webkit-transition: .2s ease box-shadow, .2s ease transform;
+    transition: .2s ease box-shadow, .2s ease transform;
+    transition: .5s;
+}
+.accent-box:hover {
+    box-shadow: 0 20px 30px 0 rgba(70, 70, 70, 0.05);
+    -webkit-transform: scale(1.05);
+            transform: scale(1.05);
+}
+.accent-box:active {
+    box-shadow: 0px 0px 1px 10px rgba(0,0,0,0.3);
+    transition: .1s;
+    -webkit-transform: scale(.95);
+            transform: scale(.95);
+}
+
+.accent-empty {
+  display: -webkit-box;
+  border-radius:1em;
+  background: rgba(70, 70, 70, 0.5);
+  -webkit-transition: .2s ease box-shadow, .2s ease transform;
+  transition: .2s ease box-shadow, .2s ease transform;
+  transition: .5s;
+}
+.accent-disabled {
+  display: -webkit-box;
+  border-radius:1em;
+  background: rgba(20, 20, 20, 0.1);
+  -webkit-transition: .2s ease box-shadow, .2s ease transform;
+  transition: .2s ease box-shadow, .2s ease transform;
+  transition: .5s;
+}
+.accent-green {
+  display: -webkit-box;
+  border-radius:1em;
+  background: #bcee8e;
+  -webkit-transition: .2s ease box-shadow, .2s ease transform;
+  transition: .2s ease box-shadow, .2s ease transform;
+  transition: .5s;
+}
+.accent-orange {
+  display: -webkit-box;
+  border-radius:1em;
+  background: #eec08e;
+  -webkit-transition: .2s ease box-shadow, .2s ease transform;
+  transition: .2s ease box-shadow, .2s ease transform;
+  transition: .5s;
+}
