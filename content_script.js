@@ -41,22 +41,42 @@ window.addEventListener("message", function(event) {
         }
       }
   }
+  
+  if (event.data.type && (event.data.type == "isVidfrombg")) {
+      var vid = document.getElementsByTagName('video');
+      if (vid.length == 0){
+        window.postMessage({
+          type: "isVidtobg",
+          isVid: false
+        });
+      } else{
+        window.postMessage({
+          type: "isVidtobg",
+          isVid: true
+        });
+      }      
+  }
+  
 });
 `
 console.log(script.textContent);
 (document.head || document.documentElement).appendChild(script);
 script.remove();
 
+var isVid = false;
+
 window.addEventListener("message", function(event) {
   // We only accept messages from ourselves
   if (event.source != window)
     return;
-
   if (event.data.type && (event.data.type == "sendQtobg")) {
     // Sending messages to bg script
     chrome.runtime.sendMessage({type: "getQ", cur: event.data.cur, ful: event.data.ful }, function(response) {
       // TODO: validate response
     });
+  }
+  if (event.data.type && (event.data.type == "isVidtobg")) {
+    isVid = event.data.isVid;
   }
 }, false);
 
@@ -72,11 +92,17 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (request.type == "lowerVidQ"){
-      sendResponse({farewell: "goodbye"});
       console.log('lowering qual');
-      window.postMessage({
-        type: "lowerVidQfrombg"});
+      window.postMessage({type: "lowerVidQfrombg"});
+      sendResponse({farewell: "goodbye"});
     }
-  });
 
-init();
+    if (request.type == "isVid"){
+      console.log('checking if is vid');
+      window.postMessage({
+        type: "isVidfrombg"
+      });
+      sendResponse({isVid: isVid});
+    }
+      
+  });

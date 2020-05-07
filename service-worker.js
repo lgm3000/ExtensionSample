@@ -41,7 +41,7 @@ self.addEventListener('notificationclick', function(event) {
     console.log("disabling notifications");
     let today = new Date();
     // muting notifications for 30 seconds 
-    today.setSeconds( today.getSeconds() + 30);
+    today.setSeconds( today.getSeconds() + 300);
     channel.postMessage({type: 'mute until', val: today});
   }
 }, false);

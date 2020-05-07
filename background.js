@@ -172,7 +172,7 @@ function refreshVidQuality(){
     chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
     	console.log(tabs[0].url);
 		chrome.tabs.sendMessage(tabs[0].id, {type: "sendQ"}, function(response) {
-		console.log(response);
+		    console.log(response);
 		});
 	});
 }
@@ -211,7 +211,6 @@ function syncScore(){
 		    			sstr = sstr + dday + "," + ttime + ":" + arr2[dday][ttime] + ";"
 	sstr = sstr.substring(0, sstr.length - 1);
     chrome.storage.sync.set({'score': sstr}, function() {
-		console.log('is set to ' + sstr);
     })
 }
 
@@ -390,20 +389,23 @@ async function main(){
 			// Maintaining the activity FIFO stack 
 			chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 				try{
-					var curtab = new URL(tabs[0].url).hostname;
-					if(curtab == "www.youtube.com"){
-						actStack.unshift("video_streaming");
+				    chrome.tabs.sendMessage(tabs[0].id, {type: "isVid"}, function(response) {
+				    	console.log(response.isVid);
+						if(response.isVid){
+							actStack.unshift("video_streaming");
 						} else{
-						actStack.unshift("other");
+							actStack.unshift("other");
 						}
-				}
-				catch(error){
+					});
+				} catch(error){
+					console.log("defaulting activity");
 					actStack.unshift("other");
 				}
 
 				if(actStack.length > actStackLength){
 					actStack.pop();
 				}
+				
 			});
 			activeType = getAct(actStack); 
 			console.log(actStack);
