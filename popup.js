@@ -3,12 +3,34 @@
 
 'use strict';
 
-import {EnvImp,BEnvImp,getWeather,pullForecast} from './background.js';
+//import {EnvImp,BEnvImp,getWeather,pullForecast} from './background.js';
+
+var timeranges = {};
+var leisureOptions = {};
+var dayOfWeek = {};
+
+function initVars(){
+    chrome.runtime.sendMessage({type: "getVars"}, function(response) {
+    	timeranges = response.timeranges;
+    	leisureOptions = response.leisureOptions;
+    	dayOfWeek = response.dayOfWeek;
+    	main();
+    });
+}
+
+function getWeather(){
+    return new Promise(function(resolve){
+    	chrome.runtime.sendMessage({type: "getWeather"}, function(response) {
+    	    resolve(response.weather);
+        });
+    }); 
+
+}
 
 let icon = document.getElementById('icon');
 
-function loadImage(){
-    const weatherMod = getWeather();
+async function loadImage(){
+    const weatherMod = await getWeather();
     console.log(weatherMod);
 	if (weatherMod != undefined){
         console.log(weatherMod);
@@ -24,12 +46,13 @@ function loadImage(){
 }
 
 window.onload = function() {
-	loadImage();
+	initVars();
 }
 
-icon.onclick = function(element) {
-	var weatherMod = getWeather();
-	pullForecast();
+function main(){
 	loadImage();
-	console.log(weatherMod);
-};
+	icon.onclick = function(element) {
+		chrome.runtime.sendMessage({type: "pullForecast"}, function() {});
+		loadImage();
+	};
+}

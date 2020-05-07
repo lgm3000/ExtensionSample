@@ -10,7 +10,7 @@
 // the time needs to be in format HH:MM-HH:MM
 
 const timeranges = {
-  't1':'08:00-10:00',
+  't1':'00:00-10:00',
   't2':'10:00-12:00',
   't3':'12:00-14:00',
   't4':'14:00-16:00',
@@ -33,11 +33,12 @@ const dayOfWeek = {
 // currently it is defined in format 'backend name':'display name'
 
 const leisureOptions = {
-  'nothing':'Nothin\'',
-  'online_gaming':'Vidya Gaem',
-  'video_streaming':'Netflix no chill',
-  'audio_streaming':'Stream Music',
-  'page_browsing':'Page Browsing'};
+  'nothing':'Nothin\''
+  //,'online_gaming':'Vidya Gaem'
+  ,'video_streaming':'Netflix no chill'
+  //,'audio_streaming':'Stream Music'
+  //,'page_browsing':'Page Browsing'
+  };
 
 const activityWeight = {
   'other': 5,
@@ -57,11 +58,11 @@ const refreshInterval = 0 /*mins*/ * 60 * 1000 +
 const BEnvA = 2;
 
 // define the size / length of the activity FIFO stack
-const actStackLength = 20;
+const actStackLength = 1;
                             
 /*****************************************************************************************/
 
-export {timeranges,leisureOptions,dayOfWeek};
+//export {timeranges,leisureOptions,dayOfWeek};
 
 var weather = true;
 var activeType = "Unknown";
@@ -69,15 +70,20 @@ var actStack = new Array();
 var EnvImp = 0; // Env. Impact Score (BEnv Score)
 var BEnvImp = 0; // Behavior-offset Env. Impact Score (BEnv Score)
 var forecast = {};
+var arr2 = {};
+for(var i in dayOfWeek){
+	forecast[i] = {};
+	arr2[i] = {};
+	}
 var fset = false;
 var rset = false;
-for(var i in dayOfWeek)
-	forecast[i] = {};
 var muteUntil = new Date();
 const channel = new BroadcastChannel('sw-messages');
 var vidQuality = {};
 
-export {EnvImp,BEnvImp};
+var notcount = 0;
+
+//export {EnvImp,BEnvImp};
 
 /*****************************************************************************************/
 // Notification zone
@@ -99,7 +105,10 @@ function show(addText,swRegistration) {
 	if(!(today < muteUntil)){
 		console.log(activeType);
       	if(activeType == 'video_streaming'){
-            options = [
+      		// We want to know if we can try lowering the quality of video
+      		refreshVidQuality();
+      		if (vidQuality['cur'].startsWith('h')){
+      		    options = [
                     {
 						action: "lower",
 						title: "lower vid quality"
@@ -108,12 +117,23 @@ function show(addText,swRegistration) {
 						action: "disable",
 						title: "mute notifications"
 					}
-					
 				];
+      		} else {
+      			options = [
+					{
+						action: "reset to reddit",
+						title: "go to reddit"
+					},
+					{
+						action: "disable",
+						title: "mute notifications"
+					}
+				];
+      		}
   	    }else{
   	        options = [
 					{
-						action: "go to site",
+						action: "go to youtube",
 						title: "go to youtube"
 					},
 					{
@@ -149,7 +169,7 @@ async function registerServiceWorker() {
 }
 
 function refreshVidQuality(){
-    chrome.tabs.query({active: true}, function(tabs) {
+    chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
     	console.log(tabs[0].url);
 		chrome.tabs.sendMessage(tabs[0].id, {type: "sendQ"}, function(response) {
 		console.log(response);
@@ -169,6 +189,33 @@ function lowerVidQuality(){
 	}
 }
 
+function setScoreArr(sstr){
+	if(sstr == null)
+	    for(var i in dayOfWeek)
+	        for(var j in timeranges)
+	            arr2[i][j] = 0;
+	else{
+		console.log(sstr);
+		console.log(arr2);
+	    sstr.split(';').forEach(function(item){
+    		arr2[item.split(':')[0].split(',')[0]][item.split(':')[0].split(',')[1]] = Number(item.split(':')[1]);
+    	});
+	}
+}
+function syncScore(){
+	var sstr = "";
+	    for (var dday in dayOfWeek) 
+		    if(dayOfWeek.hasOwnProperty(dday))
+		    	for (var ttime in timeranges) 
+		    		if(timeranges.hasOwnProperty(ttime))
+		    			sstr = sstr + dday + "," + ttime + ":" + arr2[dday][ttime] + ";"
+	sstr = sstr.substring(0, sstr.length - 1);
+    chrome.storage.sync.set({'score': sstr}, function() {
+		console.log('is set to ' + sstr);
+    })
+}
+
+
 /*****************************************************************************************/
 
 // This function will be used to determine the weather which should affect energy source
@@ -180,7 +227,9 @@ function pullForecast(){
 	for (var dday in dayOfWeek)
         for (var time in timeranges)
             if(timeranges.hasOwnProperty(time)){
-                sstr = sstr + dday + ',' + time + ":" + (Math.floor(Math.random() * 10) + 1) + ";"
+            	var rnd = (Math.floor(Math.random() * 10) + 1);
+            	forecast[dday][time] = rnd;
+                sstr = sstr + dday + ',' + time + ":" + rnd + ";"
             }
 	sstr = sstr.substring(0, sstr.length - 1);
     chrome.storage.sync.set({'forecast': sstr}, function() {fset = true;});
@@ -216,7 +265,7 @@ function getForecast(day,range){
 	else return undefined;
 }
 
-export {getWeather,getForecast,pullForecast};
+// export {getWeather,getForecast,pullForecast};
 
 function isBetween(timePeriod){
     let startDate = Date.parse('01/01/2000 ' + timePeriod.split('-')[0] + ':00');
@@ -225,7 +274,6 @@ function isBetween(timePeriod){
     let curDate = Date.parse('01/01/2000 ' + today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds())
     return curDate > startDate && curDate <= endDate;
 }
-
 function getAct(arr){
 	var max = 0;
 	var res = null;
@@ -256,6 +304,8 @@ chrome.runtime.onInstalled.addListener(function() {
   registerServiceWorker();
 });
 
+
+// Service worker listener
 channel.addEventListener('message', event => {
   console.log(event);
   if(event.data.type == 'mute until'){
@@ -264,13 +314,18 @@ channel.addEventListener('message', event => {
   	chrome.storage.sync.set({'mute':h},function(){});
   	muteUntil = h;
   }
+  if(event.data.type == 'resetpage'){
+    chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
+      chrome.tabs.update(tabs[0].id, {url: event.data.val});
+	});
+  }   
   if(event.data.type == 'lower'){
   	console.log(event.data.val);
     lowerVidQuality();
   }   
 });
 
-// Getting data from content script
+// Runtime listener
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
       // console.log(sender.tab ? "from a content script:" + sender.tab.url : "from the extension");
@@ -278,10 +333,21 @@ chrome.runtime.onMessage.addListener(
           sendResponse({farewell: "goodbye"});
           vidQuality = {cur: request.cur, ful:request.ful};
       }
+      if (request.type == "getVars"){
+          sendResponse({timeranges: timeranges, leisureOptions: leisureOptions, dayOfWeek:dayOfWeek});
+      }
+      if (request.type == "getWeather"){
+          var weathermod = getWeather();
+          sendResponse({weather:weathermod});
+      }
+      if (request.type == "pullForecast"){
+          pullForecast();
+      }
       console.log(request);
+
 });
 
-// main function
+/************************************************************************** main function***********************************************************************/
 async function main(){
 	try{
 		getForecast(0,'t1');
@@ -290,6 +356,15 @@ async function main(){
 		console.log('resetting forecast');
 		pullForecast();
 	}
+    try{
+		chrome.storage.sync.get('score',function(data){
+			setScoreArr(data.score);
+		});
+	}
+	catch(error){
+		setScoreArr();
+	}
+
     const swRegistration = await registerServiceWorker();
     
 //    show('Hi',swRegistration);
@@ -300,7 +375,7 @@ async function main(){
 	// TODO: option to turn off notification for X amount of time. (pop-up)
 
 	setInterval(function(){
-		refreshVidQuality();
+		syncScore();
 		// Pulling user planning from storage
 		chrome.storage.sync.get('activity',function(data){
 			let today = (new Date().getDay() + 6) % 7;
@@ -331,7 +406,7 @@ async function main(){
 				}
 			});
 			activeType = getAct(actStack); 
-			//console.log(actStack);
+			console.log(actStack);
 			//console.log(activeType);
 
 			for (var time in timeranges) 
@@ -348,10 +423,10 @@ async function main(){
 
 							// Calculating the environmental impact score
 							EnvImp = EnvImp + q * weatherWeight;
+							arr2[today][time] = Number(arr2[today][time]) + Number(q * weatherWeight);
 
 							// Calculating the behaviour-offset Env. Impact score
-							BEnvImp = BEnvImp + 
-								((p - q)>=0?0.02:-0.1) * (p - q + (plan[time] == activeType)) * (p - q + (plan[time] == activeType));
+							BEnvImp = BEnvImp + ((p - q)>=0?0.02:-0.1) * (p - q + (plan[time] == activeType)) * (p - q + (plan[time] == activeType));
 
 							// TODO: calculate the behaviour assessment score
 							// TODO: tracks your active tab & tries to identify if you're doing what you
@@ -361,7 +436,7 @@ async function main(){
 							console.log("current weather: " + getWeather());
 							console.log("active activity: " + activeType);
 							show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],
-							swRegistration);
+							    swRegistration);
 
 							if (plan[time]!='disabled'){
 
@@ -395,6 +470,5 @@ async function main(){
 		});
 	}, refreshInterval);
 }
-
 
 main();

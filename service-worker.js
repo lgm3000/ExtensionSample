@@ -11,24 +11,25 @@ console.log('Hello from service worker');
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   mute = true;
-  if (event.action === 'go to site') {
-    console.log("hahahoho was clicked");
-    var url = "https://youtube.com";
+  if (event.action.startsWith('go to') ) {
+    console.log("goto was clicked");
+    console.log(event.action);
+    var url = "https://"+event.action.substring(6)+".com";
     event.waitUntil(
         clients.matchAll({includeUncontrolled: true,type: 'window'}).then( windowClients => {
-            // Check if there is already a window/tab open with the target URL
-            for (var i = 0; i < windowClients.length; i++) {
-                var client = windowClients[i];
-                // If so, just focus it.
-                console.log(client.url);
-                if (client.url === url && 'focus' in client) {
-                    return client.focus();
-                }
-            }
             // If not, then open the target URL in a new window/tab.
             if (clients.openWindow) {
                 return clients.openWindow(url);
             }
+        })
+    );
+  } else if (event.action.startsWith('reset to') ) {
+    console.log("reset was clicked");
+    console.log(event.action);
+    var url = "https://"+event.action.substring(9)+".com";
+    event.waitUntil(
+        clients.matchAll({includeUncontrolled: true,type: 'window'}).then( windowClients => {
+            channel.postMessage({type: 'resetpage', val: url});
         })
     );
   } else if (event.action === 'lower') {

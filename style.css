@@ -104,13 +104,24 @@ html, body {
   grid-template-rows: repeat(8, 1fr);
   grid-template-columns: repeat(7, 1fr);
 }
-.timetable .content > div {
-  box-shadow: inset 1px 0 0 #ECEFF1, inset 0 1px 0 0 #ECEFF1;
-}
 .timetable .content > p {
   position: relative;
   height: auto;
   width: auto;
+}
+.timetable .content > div {
+  box-shadow: inset 1px 0 0 #ECEFF1, inset 0 1px 0 0 #ECEFF1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.timetable .content > div > p {
+  color: white;
+  font-size:large;
+  position: relative;
+  height: auto;
+  width: auto;
+  opacity: 0.2;
 }
 
 .timetable .accent-empty {

@@ -2,16 +2,17 @@
 
 var script = document.createElement('script');
 
-console.log("lol?");
-
 script.textContent = `
+/*
 console.log("lol?");
 console.log("js is a cunt");
 
 setInterval(function(){
+    var player = document.getElementById('movie_player');
     console.log(player.getPlaybackQuality());
     console.log(player.getAvailableQualityLevels());
 },10000);
+*/
 
 window.addEventListener("message", function(event) {
   var player = document.getElementById('movie_player');
@@ -32,15 +33,13 @@ window.addEventListener("message", function(event) {
           ful: Qlist}, "*");
   }
   if (event.data.type && (event.data.type == "lowerVidQfrombg")) {
-      console.log('lowering qualcc');
-      console.log(Qlist);
-      for(q in Qlist)
-        console.log(q);
-        if(!Qlist[q].startsWith('h')){
-          console.log(Qlist[q]);
+      for(var q in Qlist){
+        if(!Qlist[q].startsWith('h') && Qlist[q]!='auto'){
+          console.log('lowering qualcc');
           player.setPlaybackQualityRange([Qlist[q]]);
           return;
         }
+      }
   }
 });
 `
@@ -79,3 +78,5 @@ chrome.runtime.onMessage.addListener(
         type: "lowerVidQfrombg"});
     }
   });
+
+init();
