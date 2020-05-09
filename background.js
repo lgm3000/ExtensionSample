@@ -89,7 +89,7 @@ var notCount = 0;
 
 //export {EnvImp,BEnvImp};
 
-const forecastInit = null;
+const forecastInit = '0,t1:8;0,t2:6;0,t3:7;0,t4:6;0,t5:5;0,t6:4;0,t7:4;0,t8:4;1,t1:1;1,t2:2;1,t3:2;1,t4:2;1,t5:2;1,t6:2;1,t7:2;1,t8:1;2,t1:2;2,t2:3;2,t3:3;2,t4:3;2,t5:3;2,t6:3;2,t7:3;2,t8:2;3,t1:4;3,t2:5;3,t3:5;3,t4:4;3,t5:5;3,t6:6;3,t7:6;3,t8:6;4,t1:5;4,t2:5;4,t3:5;4,t4:4;4,t5:5;4,t6:4;4,t7:4;4,t8:4;5,t1:4;5,t2:4;5,t3:5;5,t4:5;5,t5:5;5,t6:4;5,t7:4;5,t8:3;6,t1:4;6,t2:5;6,t3:6;6,t4:6;6,t5:6;6,t6:6;6,t7:6;6,t8:6';
 
 /*****************************************************************************************/
 // Notification zone
@@ -218,8 +218,14 @@ function syncScore(){
 	    for (var dday in dayOfWeek) 
 		    if(dayOfWeek.hasOwnProperty(dday))
 		    	for (var ttime in timeranges) 
-		    		if(timeranges.hasOwnProperty(ttime))
+		    		if(timeranges.hasOwnProperty(ttime)){
+		    			if(isNaN(arr2[dday][ttime])){
+		    				arr2[dday][ttime] = 0;
+		    			}
 		    			sstr = sstr + dday + "," + ttime + ":" + arr2[dday][ttime] + ";"
+		    			
+		    		}
+		    			
 	sstr = sstr.substring(0, sstr.length - 1);
     chrome.storage.sync.set({'score': sstr}, function() {
     })
@@ -241,7 +247,8 @@ function muteNotification(data){
 function pullForecast(){
 	var sstr = "";
 	fset = false;
-	if(forecastInit == null)
+	console.log("pulling Fore");
+	if(forecastInit == null){
 		for (var dday in dayOfWeek)
 			for (var time in timeranges)
 				if(timeranges.hasOwnProperty(time)){
@@ -249,10 +256,13 @@ function pullForecast(){
 					forecast[dday][time] = rnd;
 					sstr = sstr + dday + ',' + time + ":" + rnd + ";"
 				}
+	}
 	else{
-		var val = forecastInit.split(',');
-		forecast = forecastInit;
-		sstr = forecastInit;
+		console.log("setting forecast from initString");
+		forecastInit.split(';').forEach(function(item){
+		    forecast[item.split(':')[0].split(',')[0]][item.split(':')[0].split(',')[1]] = item.split(':')[1];
+	    });
+		sstr = forecastInit + ';';
 	}
 	sstr = sstr.substring(0, sstr.length - 1);
     chrome.storage.sync.set({'forecast': sstr}, function() {fset = true;});
@@ -323,7 +333,7 @@ chrome.runtime.onInstalled.addListener(function() {
       actions: [new chrome.declarativeContent.ShowPageAction()]
     }]);
   });
-  //pullForecast();
+  pullForecast();
   registerServiceWorker();
 });
 

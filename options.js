@@ -95,7 +95,8 @@ function refreshSuggestions(day,time){
             stylestr = stylestr + 'transform: scale(0.7,0.7);';
           if(document.querySelector('[att-day="'+day+'"][att-time="'+item+'"]').classList.contains('accent-disabled')) 
               stylestr = stylestr + 'opacity: 0.2;';
-		  if(getForecast(day,item)>5){
+          var weatherMod = getForecast(day,item);
+		  if(weatherMod>5){
             sd1.innerHTML = 'Read Books ' + getForecast(day,item);
             sd1.style = stylestr;
             sd2.innerHTML = '<img src="images/redWeather.png" style="display:block; max-width: 100%; max-height: 80%; display: block;object-fit: contain;' + stylestr + '"/>';
