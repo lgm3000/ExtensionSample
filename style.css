@@ -29,7 +29,7 @@ html, body {
   grid-template-columns: 120px 7fr 1.2fr;
   grid-template-rows: 60px;
   width: 100vw;
-  height: 90vh;
+  height: 85vh;
 }
 .timetable .aside{
   grid-column-start: 3;

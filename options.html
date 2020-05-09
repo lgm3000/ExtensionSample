@@ -5,7 +5,7 @@
   <title>Timetable template with CSS grid</title>
 	<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Karla'>
 	<link rel="stylesheet" href="./style.css">
-
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 </head>
 <body>
 <!-- partial:index.partial.html -->
@@ -30,12 +30,20 @@
   <div id="content" class="content">
   </div>
 </div>
-<!--div style="display: grid; grid-template-rows: 1fr 1fr;grid-template-columns:1fr 1fr">
-<input type="text" id="envF" value="Env Friendly Site">
-<input type="text" id="envNF" value="Bad bad site">
-<button onclick="submitPref('envF')">Add to Env. Friendly Site Pool</button>
-<button onclick="submitPref('envNF')">Add to Bad Bad Site Pool</button>
-</div-->
+<div style="display: grid; grid-template-rows: 1fr 1fr;grid-template-columns:1fr 1fr">
+    <p>      
+      <label class="w3-text-green"><b>Add green site</b></label>
+      <input class="w3-input w3-border" name="green" type="text" id="greensite">
+    </p>
+    <p>      
+      <label class="w3-text-red"><b>Add non-green site</b></label>
+      <input class="w3-input w3-border" name="red" type="text" id="redsite">
+    </p>
+    <p>      
+      <button class="w3-btn w3-green" id="greenbutton">Add</button></p>
+    <p>      
+      <button class="w3-btn w3-red" id="redbutton">Add</button></p>
+</div>
 <div id="modal" class="modal">
 
   <!-- Modal content -->

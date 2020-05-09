@@ -86,7 +86,9 @@ var muteUntil = new Date();
 const channel = new BroadcastChannel('sw-messages');
 var vidQuality = {};
 var notCount = 0;
-
+var siteOptions = {};
+siteOptions['green'] = ['reddit.com'];
+siteOptions['red'] = ['youtube.com'];
 //export {EnvImp,BEnvImp};
 
 const forecastInit = '0,t1:8;0,t2:6;0,t3:7;0,t4:6;0,t5:5;0,t6:4;0,t7:4;0,t8:4;1,t1:1;1,t2:2;1,t3:2;1,t4:2;1,t5:2;1,t6:2;1,t7:2;1,t8:1;2,t1:2;2,t2:3;2,t3:3;2,t4:3;2,t5:3;2,t6:3;2,t7:3;2,t8:2;3,t1:4;3,t2:5;3,t3:5;3,t4:4;3,t5:5;3,t6:6;3,t7:6;3,t8:6;4,t1:5;4,t2:5;4,t3:5;4,t4:4;4,t5:5;4,t6:4;4,t7:4;4,t8:4;5,t1:4;5,t2:4;5,t3:5;5,t4:5;5,t5:5;5,t6:4;5,t7:4;5,t8:3;6,t1:4;6,t2:5;6,t3:6;6,t4:6;6,t5:6;6,t6:6;6,t7:6;6,t8:6';
@@ -108,12 +110,15 @@ const forecastInit = '0,t1:8;0,t2:6;0,t3:7;0,t4:6;0,t5:5;0,t6:4;0,t7:4;0,t8:4;1,
 function show(addText,swRegistration) {
 	var today = new Date();
 	var options = [];
+	console.log(siteOptions);
+	var greensite = siteOptions['green'][Math.floor(Math.random() * 100) % siteOptions['green'].length];
 	if(!(today < muteUntil)){
 		console.log(activeType);
       	if(activeType == 'video_streaming'){
       		// We want to know if we can try lowering the quality of video, but only if the current tab is youtube
       		refreshVidQuality();
       		if (vidQuality['cur'].startsWith('h')){
+      			console.log("!!!");
       		    options = [
                     {
 						action: "lower",
@@ -127,8 +132,8 @@ function show(addText,swRegistration) {
       		} else {
       			options = [
 					{
-						action: "reset to reddit",
-						title: "go to reddit"
+						action: "reset to " + greensite,
+						title: "go to " + greensite
 					},
 					{
 						action: "disable",
@@ -136,11 +141,11 @@ function show(addText,swRegistration) {
 					}
 				];
       		}
-  	    }else{
+  	    } else{
   	        options = [
 					{
-						action: "go to reddit",
-						title: "go to reddit"
+						action: "go to " + greensite,
+						title: "go to " + greensite
 					},
 					{
 						action: "disable",
@@ -157,7 +162,7 @@ function show(addText,swRegistration) {
 					actions: options
 				});
 		var muteU = new Date();
-		muteU.setSeconds(muteU.getSeconds() + 60)
+		muteU.setSeconds(muteU.getSeconds() + 1)
 		muteNotification(muteU);
     }
 	
@@ -378,6 +383,14 @@ chrome.runtime.onMessage.addListener(
       if (request.type == "pullForecast"){
           pullForecast();
       }
+      if (request.type == "addOption"){
+          siteOptions[request.col].unshift(request.val);
+          if(siteOptions[request.col].length>4)
+              siteOptions[request.col].pop();
+          var nameval = request.col + 'sites';
+          chrome.storage.sync.set({'redsites': siteOptions['red']});
+          chrome.storage.sync.set({'greensites': siteOptions['green']});
+      }
 
 });
 
@@ -480,7 +493,7 @@ async function main(){
 							console.log("current    plan: " + plan[time]);
 							console.log("current weather: " + getWeather());
 							console.log("active activity: " + activeType);
-							//show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
+							show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
 
 
                             // notification zone

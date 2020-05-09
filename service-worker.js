@@ -13,7 +13,7 @@ self.addEventListener('notificationclick', function(event) {
   if (event.action.startsWith('go to') ) {
     console.log("goto was clicked");
     console.log(event.action);
-    var url = "https://"+event.action.substring(6)+".com";
+    var url = "https://"+event.action.substring(6);
     event.waitUntil(
         clients.matchAll({includeUncontrolled: true,type: 'window'}).then( windowClients => {
             // If not, then open the target URL in a new window/tab.
@@ -25,7 +25,7 @@ self.addEventListener('notificationclick', function(event) {
   } else if (event.action.startsWith('reset to') ) {
     console.log("reset was clicked");
     console.log(event.action);
-    var url = "https://"+event.action.substring(9)+".com";
+    var url = "https://"+event.action.substring(9);
     event.waitUntil(
         clients.matchAll({includeUncontrolled: true,type: 'window'}).then( windowClients => {
             channel.postMessage({type: 'resetpage', val: url});

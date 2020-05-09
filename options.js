@@ -109,8 +109,12 @@ function refreshSuggestions(day,time){
     }
 }
 
-function submitPref(site){
-	
+function submitPref(col){
+	var val = document.getElementById(col + "site").value;
+	console.log(val);
+	if(val.length > 3)
+	    chrome.runtime.sendMessage({type: "addOption",col: col,val: val}, function(response) {});
+	document.getElementById(col + "site").value = "";
 }
 
 function syncActivities(){
@@ -332,6 +336,9 @@ function main(){
 
 	constructTable(timeranges);
 	var Mdown = false;
+
+    document.getElementById("greenbutton").addEventListener("click",function(){submitPref('green');});
+    document.getElementById("redbutton").addEventListener("click",function(){submitPref('red');});
 
 	onmousedown = function(e) {
 		//e.preventDefault();
