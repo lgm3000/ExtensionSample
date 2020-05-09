@@ -91,7 +91,7 @@ siteOptions['green'] = ['reddit.com'];
 siteOptions['red'] = ['youtube.com'];
 //export {EnvImp,BEnvImp};
 
-const forecastInit = '0,t1:8;0,t2:6;0,t3:7;0,t4:6;0,t5:5;0,t6:4;0,t7:4;0,t8:4;1,t1:1;1,t2:2;1,t3:2;1,t4:2;1,t5:2;1,t6:2;1,t7:2;1,t8:1;2,t1:2;2,t2:3;2,t3:3;2,t4:3;2,t5:3;2,t6:3;2,t7:3;2,t8:2;3,t1:4;3,t2:5;3,t3:5;3,t4:4;3,t5:5;3,t6:6;3,t7:6;3,t8:6;4,t1:5;4,t2:5;4,t3:5;4,t4:4;4,t5:5;4,t6:4;4,t7:4;4,t8:4;5,t1:4;5,t2:4;5,t3:5;5,t4:5;5,t5:5;5,t6:4;5,t7:4;5,t8:3;6,t1:4;6,t2:5;6,t3:6;6,t4:6;6,t5:6;6,t6:6;6,t7:6;6,t8:6';
+const forecastInit = '5,t1:9;5,t2:7;5,t3:8;5,t4:7;5,t5:6;5,t6:5;5,t7:5;5,t8:5;6,t1:2;6,t2:8;6,t3:3;6,t4:7;6,t5:9;6,t6:3;6,t7:3;6,t8:2;0,t1:3;0,t2:4;0,t3:4;0,t4:4;0,t5:4;0,t6:4;0,t7:4;0,t8:3;1,t1:5;1,t2:6;1,t3:6;1,t4:5;1,t5:6;1,t6:7;1,t7:7;1,t8:7;2,t1:6;2,t2:6;2,t3:6;2,t4:5;2,t5:6;2,t6:5;2,t7:5;2,t8:5;3,t1:5;3,t2:5;3,t3:6;3,t4:6;3,t5:6;3,t6:5;3,t7:5;3,t8:4;4,t1:5;4,t2:6;4,t3:7;4,t4:7;4,t5:7;4,t6:7;4,t7:7;4,t8:7';
 
 /*****************************************************************************************/
 // Notification zone
@@ -493,7 +493,7 @@ async function main(){
 							console.log("current    plan: " + plan[time]);
 							console.log("current weather: " + getWeather());
 							console.log("active activity: " + activeType);
-							show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
+							//show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
 
 
                             // notification zone
