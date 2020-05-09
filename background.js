@@ -51,14 +51,18 @@ const activityWeight = {
 // define the refresh interval of weather-checking
 
 const refreshInterval = 0 /*mins*/ * 60 * 1000 +
-                        8 /*secs*/ * 1000;
+                        5 /*secs*/ * 1000;
+
+const notificationInterval =   Math.floor(
+                                (1 /*mins*/ * 60 * 1000 +
+                                 0 /*secs*/ * 1000) / refreshInterval);
 
 // define the constant coefficient used to calculate BEnv Score
 
 const BEnvA = 2;
 
 // define the size / length of the activity FIFO stack
-const actStackLength = 1;
+const actStackLength = 2;
                             
 /*****************************************************************************************/
 
@@ -66,6 +70,7 @@ const actStackLength = 1;
 
 var weather = true;
 var activeType = "Unknown";
+var prevactiveType = "Unknown";
 var actStack = new Array();
 var EnvImp = 0; // Env. Impact Score (BEnv Score)
 var BEnvImp = 0; // Behavior-offset Env. Impact Score (BEnv Score)
@@ -80,10 +85,11 @@ var rset = false;
 var muteUntil = new Date();
 const channel = new BroadcastChannel('sw-messages');
 var vidQuality = {};
-
-var notcount = 0;
+var notCount = 0;
 
 //export {EnvImp,BEnvImp};
+
+const forecastInit = null;
 
 /*****************************************************************************************/
 // Notification zone
@@ -105,7 +111,7 @@ function show(addText,swRegistration) {
 	if(!(today < muteUntil)){
 		console.log(activeType);
       	if(activeType == 'video_streaming'){
-      		// We want to know if we can try lowering the quality of video
+      		// We want to know if we can try lowering the quality of video, but only if the current tab is youtube
       		refreshVidQuality();
       		if (vidQuality['cur'].startsWith('h')){
       		    options = [
@@ -133,8 +139,8 @@ function show(addText,swRegistration) {
   	    }else{
   	        options = [
 					{
-						action: "go to youtube",
-						title: "go to youtube"
+						action: "go to reddit",
+						title: "go to reddit"
 					},
 					{
 						action: "disable",
@@ -150,6 +156,9 @@ function show(addText,swRegistration) {
 					body: addText,
 					actions: options
 				});
+		var muteU = new Date();
+		muteU.setSeconds(muteU.getSeconds() + 60)
+		muteNotification(muteU);
     }
 	
 }
@@ -171,16 +180,18 @@ async function registerServiceWorker() {
 function refreshVidQuality(){
     chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
     	console.log(tabs[0].url);
-		chrome.tabs.sendMessage(tabs[0].id, {type: "sendQ"}, function(response) {
-		    console.log(response);
-		});
+    	if(tabs[0].url.includes("youtube.com"))
+		    chrome.tabs.sendMessage(tabs[0].id, {type: "sendQ"}, function(response) {
+    		    console.log(response);
+    		});
+    	vidQuality = {cur: 'unknown', ful:'unknown'};
 	});
 }
 
 function lowerVidQuality(){
 	refreshVidQuality();
 	// check if vid quality can be lowered
-	if(vidQuality.ful.some(function(ele){return !ele.startsWith('h');})){
+	if(vidQuality.ful.some(function(ele){return !ele.startsWith('h');}) && vidQuality.ful[0] != 'unknown'){
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		    chrome.tabs.sendMessage(tabs[0].id, {type: "lowerVidQ"}, function(response) {
 		    console.log(response);
@@ -220,16 +231,29 @@ function syncScore(){
 // This function will be used to determine the weather which should affect energy source
 // Using RNG to generate weather changes - in the final version should be pulling
 // actual data
+function muteNotification(data){
+	console.log('Mute notifications until:' + data);
+	var h = Date.parse(data).toString();
+  	//chrome.storage.sync.set({'mute':h},function(){});
+  	muteUntil = h > muteUntil? h:muteUntil;
+}
+
 function pullForecast(){
 	var sstr = "";
 	fset = false;
-	for (var dday in dayOfWeek)
-        for (var time in timeranges)
-            if(timeranges.hasOwnProperty(time)){
-            	var rnd = (Math.floor(Math.random() * 10) + 1);
-            	forecast[dday][time] = rnd;
-                sstr = sstr + dday + ',' + time + ":" + rnd + ";"
-            }
+	if(forecastInit == null)
+		for (var dday in dayOfWeek)
+			for (var time in timeranges)
+				if(timeranges.hasOwnProperty(time)){
+					var rnd = (Math.floor(Math.random() * 10) + 1);
+					forecast[dday][time] = rnd;
+					sstr = sstr + dday + ',' + time + ":" + rnd + ";"
+				}
+	else{
+		var val = forecastInit.split(',');
+		forecast = forecastInit;
+		sstr = forecastInit;
+	}
 	sstr = sstr.substring(0, sstr.length - 1);
     chrome.storage.sync.set({'forecast': sstr}, function() {fset = true;});
 }
@@ -299,7 +323,7 @@ chrome.runtime.onInstalled.addListener(function() {
       actions: [new chrome.declarativeContent.ShowPageAction()]
     }]);
   });
-  pullForecast();
+  //pullForecast();
   registerServiceWorker();
 });
 
@@ -308,10 +332,8 @@ chrome.runtime.onInstalled.addListener(function() {
 channel.addEventListener('message', event => {
   console.log(event);
   if(event.data.type == 'mute until'){
-  	console.log('Mute notifications until:' + Date.parse(event.data.val));
-  	var h = Date.parse(event.data.val).toString();
-  	chrome.storage.sync.set({'mute':h},function(){});
-  	muteUntil = h;
+  	console.log(event.data.val);
+  	muteNotification(event.data.val);
   }
   if(event.data.type == 'resetpage'){
     chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
@@ -339,10 +361,13 @@ chrome.runtime.onMessage.addListener(
           var weathermod = getWeather();
           sendResponse({weather:weathermod});
       }
+      if (request.type == "getForecast"){
+          
+          sendResponse({weather:weathermod});
+      }
       if (request.type == "pullForecast"){
           pullForecast();
       }
-      console.log(request);
 
 });
 
@@ -365,10 +390,8 @@ async function main(){
 	}
 
     const swRegistration = await registerServiceWorker();
-    
-//    show('Hi',swRegistration);
 
-	// Checks weather status every 3 seconds.
+	// Checks weather status every x seconds.
 	// TODO: in reality interval should be longer (5-mins+), as this refresh is not (and should not be)
 	// very time-sensitive.
 	// TODO: option to turn off notification for X amount of time. (pop-up)
@@ -377,7 +400,8 @@ async function main(){
 		syncScore();
 		// Pulling user planning from storage
 		chrome.storage.sync.get('activity',function(data){
-			let today = (new Date().getDay() + 6) % 7;
+			let now = new Date();
+			let today = (now.getDay() + 6) % 7;
 			let tmp = data.activity.split(';');
 			var plan = {};
 			tmp.forEach(function(item){
@@ -390,12 +414,16 @@ async function main(){
 			chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 				try{
 				    chrome.tabs.sendMessage(tabs[0].id, {type: "isVid"}, function(response) {
-				    	console.log(response.isVid);
-						if(response.isVid){
-							actStack.unshift("video_streaming");
-						} else{
-							actStack.unshift("other");
-						}
+				    	try{
+						    if(response.isVid){
+    							actStack.unshift("video_streaming");
+    						} else{
+    							actStack.unshift("other");
+    						}
+				    	} catch(error){
+					        console.log("defaulting activity");
+					        actStack.unshift("other");
+				        }
 					});
 				} catch(error){
 					console.log("defaulting activity");
@@ -407,7 +435,7 @@ async function main(){
 				}
 				
 			});
-			activeType = getAct(actStack); 
+			activeType = getAct(actStack);
 			console.log(actStack);
 			//console.log(activeType);
 
@@ -420,6 +448,11 @@ async function main(){
 						if(activeType != null){
 							// Getting the weather weight
 							var weatherWeight = getWeather();
+							console.log(weatherWeight);
+                            if(weatherWeight >5)
+							    chrome.browserAction.setIcon({path: "/images/red-19.png"});
+							else
+							    chrome.browserAction.setIcon({path: "/images/green-19.png"});
 							let p = activityWeight[plan[time]];
 							let q = activityWeight[activeType];
 
@@ -437,35 +470,48 @@ async function main(){
 							console.log("current    plan: " + plan[time]);
 							console.log("current weather: " + getWeather());
 							console.log("active activity: " + activeType);
-							show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],
-							    swRegistration);
+							//show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
 
+
+                            // notification zone
+                            
+                            
+                            	
 							if (plan[time]!='disabled'){
-
+								var notStr = "??";
 								// first check if the active activity is same as plan
 								if (plan[time] == activeType) {
-
 									// if act = plan, then mildly suggest change when wheather is bad
-									if(getWeather() >= 7){
-										console.log('Thanks for sticking to your plan!');
-										console.log('However, you can consider changing your plan to something more eco-friendly!');
-									}else{
-										console.log('Thanks for sticking to your plan! The weather is good to do anything at this time!');
+									if(weatherWeight > 5){
+										notStr = 'Thanks for sticking to your plan! ('+activeType+')\n' +  'However, you can consider changing your plan to something more eco-friendly!';
+										show(notStr,swRegistration);
+										
+									}
+									else{
+										notStr = ('Thanks for sticking to your plan! The weather is good to do anything at this time!');
 									}
 
 								}
 								else{
-									// if act != plan, then strongly suggest change when wheather is bad
-									if(getWeather() >= 7){
-										console.log('You shouldn\'t be doing ' + activeType + ' at this time! Consider sticking to your plan!');
+									// if act != plan, then strongly suggest change when current activity is bad & wheather is bad
+									if(getWeather() > 5){
+										if(activityWeight[activeType]> 5){
+										    notStr = 'You shouldn\'t be doing ' + activeType + ' at this time! Consider sticking to your plan!';
+										    show(notStr,swRegistration);
+										}else{
+											notStr = 'Doing '+activeType+' during bad weather is great!';
+										    
+										}
 									}else{
-										console.log('The weather is good to do anything at this time - but please consider sticking to your plan!');
+										notStr = ('The weather is good to do anything at this time - but please consider sticking to your plan!');
 									}
 								}
-							}
-							//console.log(getForecast(today,time));
-							//console.log(EnvImp);
-							//console.log(BEnvImp);
+								
+								//console.log(getForecast(today,time));
+								//console.log(EnvImp);
+								//console.log(BEnvImp);	
+								console.log(notStr);
+                            }
 						}
 					}
 				}

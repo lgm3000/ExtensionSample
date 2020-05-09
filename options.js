@@ -10,26 +10,41 @@
 var timeranges = {};
 var leisureOptions = {};
 var dayOfWeek = {};
+var forecast = {};
+var fset = false;
 
 function initVars(){
     chrome.runtime.sendMessage({type: "getVars"}, function(response) {
     	timeranges = response.timeranges;
     	leisureOptions = response.leisureOptions;
     	dayOfWeek = response.dayOfWeek;
+    	for(var i in dayOfWeek){
+	    	arr[i]      = {};
+		    arr2[i]     = {};    
+		    forecast[i] = {};
+	    }
     	main();
     });
 }
 
-function getForecast(day,time){
-	/*
-    chrome.runtime.sendMessage({type: "getForecast",day:day,time:time}, function(response) {
-    	timeranges = response.timeranges;
-    	leisureOptions = response.leisureOptions;
-    	dayOfWeek = response.dayOfWeek;
-    	
+function getForecast(day,range){
+	chrome.storage.sync.get('forecast',function(data){
+		var tmp;
+		try{
+    	    tmp = data.forecast.split(';');
+		}catch(error){
+			console.log(data.forecast);
+			return;
+		}
+    	tmp.forEach(function(item){
+    		forecast[item.split(':')[0].split(',')[0]][item.split(':')[0].split(',')[1]] = item.split(':')[1];
+    	});
+    	fset = true;
     });
-    */
-    return(3);
+    if(fset = true){
+        return forecast[day][range];
+    }
+	else return undefined;
 }
 
 const initStr = "0,t1:online_gaming;0,t2:nothing;0,t3:nothing;0,t4:nothing;0,t5:nothing;0,t6:nothing;0,t7:nothing;0,t8:nothing;1,t1:nothing;1,t2:nothing;1,t3:nothing;1,t4:nothing;1,t5:nothing;1,t6:nothing;1,t7:nothing;1,t8:nothing;2,t1:nothing;2,t2:nothing;2,t3:nothing;2,t4:nothing;2,t5:nothing;2,t6:nothing;2,t7:nothing;2,t8:nothing;3,t1:nothing;3,t2:nothing;3,t3:nothing;3,t4:nothing;3,t5:nothing;3,t6:nothing;3,t7:nothing;3,t8:nothing;4,t1:nothing;4,t2:nothing;4,t3:nothing;4,t4:nothing;4,t5:nothing;4,t6:nothing;4,t7:nothing;4,t8:nothing;5,t1:nothing;5,t2:nothing;5,t3:nothing;5,t4:nothing;5,t5:nothing;5,t6:nothing;5,t7:nothing;5,t8:nothing;6,t1:nothing;6,t2:nothing;6,t3:nothing;6,t4:nothing;6,t5:nothing;6,t6:nothing;6,t7:nothing;6,t8:nothing";
@@ -93,6 +108,9 @@ function refreshSuggestions(day,time){
     }
 }
 
+function submitPref(site){
+	
+}
 
 function syncActivities(){
 	var sstr = "";
@@ -140,8 +158,6 @@ function setArr2(sstr){
 	        for(var j in timeranges)
 	            arr2[i][j] = 0;
 	else{
-		console.log(sstr);
-		console.log(arr2);
 	    sstr.split(';').forEach(function(item){
     		arr2[item.split(':')[0].split(',')[0]][item.split(':')[0].split(',')[1]] = Number(item.split(':')[1]);
     	});
@@ -172,7 +188,9 @@ function setArr2(sstr){
 		    // constructing the content table
 			for (var wday in dayOfWeek){
 				let ddd = document.createElement('div');
-				ddd.appendChild(document.createElement('p'));
+				let ddddd = document.createElement('p');
+				ddddd.hidden = 1;
+				ddd.appendChild(ddddd);
 				ddd.className = getColor(arr[wday][item])
 				ddd.setAttribute("att-day",wday);
 				ddd.setAttribute("att-time",item);
@@ -294,10 +312,6 @@ initVars();
 
 function main(){
 	initHeaders();
-	for(var i in dayOfWeek){
-		arr[i] = {};
-		arr2[i]= {};
-	}
 	try{
 		chrome.storage.sync.get('activity',function(data){
 			setArr(data.activity);
@@ -319,7 +333,7 @@ function main(){
 	var Mdown = false;
 
 	onmousedown = function(e) {
-		e.preventDefault();
+		//e.preventDefault();
 		console.log("mousedown");
 		if(e.button == 2){
 			console.log("right");
@@ -387,7 +401,6 @@ function main(){
 
 	onmousemove = function(event){
 		if(!c.hidden){
-			console.log("haha");
 			var div = document.getElementById('selbox');
 			var rect = c.getBoundingClientRect();
 			div.x2 = event.clientX;
@@ -396,8 +409,8 @@ function main(){
 			var x4 = Math.max(div.x1,div.x2); //Larger X
 			var y3 = Math.min(div.y1,div.y2); //Smaller Y
 			var y4 = Math.max(div.y1,div.y2); //Larger Y
-			div.style.left = Math.max(x3,rect.left) + 'px';
-			div.style.top = Math.max(y3,rect.top) + 'px';
+			div.style.left = Math.max(Math.min(x3,rect.right),rect.left) + 'px';
+			div.style.top = Math.max(Math.min(y3,rect.bottom),rect.top) + 'px';
 			div.style.width = Math.min(x4,rect.right) - Math.max(x3,rect.left) + 'px';
 			div.style.height = Math.min(y4,rect.bottom) - Math.max(y3,rect.top) + 'px';
 			[...document.getElementById('content').children].forEach(function(element){
@@ -446,15 +459,24 @@ function main(){
 			});
 		}
 	}
-
 	setInterval(function(){
 		chrome.storage.sync.get('score',function(data){
 			setArr2(data.score);
 			[...document.getElementById('content').children].forEach(function(element){
-				var ptag =  element.getElementsByTagName('p');
-				ptag[0].innerHTML = arr2[element.getAttribute('att-day')][element.getAttribute('att-time')];
+				var ptag =  element.getElementsByTagName('p')[0];
+				var envval = arr2[element.getAttribute('att-day')][element.getAttribute('att-time')];
+				var fullScore = 7200 * 2 * getForecast(element.getAttribute('att-day'),element.getAttribute('att-time'));
+				var percent = Math.floor((envval/fullScore) * 100) + '%';
+				if (envval > 0){
+					ptag.hidden = 0;
+					ptag.innerHTML = percent;
+					var icol = (envval > fullScore * 0.6)?"red":"green";
+					ptag.style.color = icol;
+				}else{
+					ptag.hidden = 1;
+				}
 			});
 		});
-	},1000);
+	},100);
 
 }

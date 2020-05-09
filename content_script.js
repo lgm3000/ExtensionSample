@@ -15,6 +15,26 @@ setInterval(function(){
 */
 
 window.addEventListener("message", function(event) {
+  if (event.source != window)
+      return;
+  if (event.data.type && (event.data.type == "isVidfrombg")) {
+      var vid = document.getElementsByTagName('video');
+      console.log(vid);
+      if (vid.length == 0){
+        window.postMessage({
+          type: "isVidtobg",
+          isVid: false
+        });
+      } else{
+        window.postMessage({
+          type: "isVidtobg",
+          isVid: true
+        });
+      }
+      return;      
+  }
+
+  // only for youtube
   var player = document.getElementById('movie_player');
   var Qlist = player.getAttribute("originalQlist");
   if(Qlist==null){
@@ -23,9 +43,6 @@ window.addEventListener("message", function(event) {
   } else {
     Qlist = Qlist.split(',');
   }
-
-  if (event.source != window)
-      return;
   if (event.data.type && (event.data.type == "sendQfrombg")) {
       window.postMessage({
           type: "sendQtobg",
@@ -41,21 +58,7 @@ window.addEventListener("message", function(event) {
         }
       }
   }
-  
-  if (event.data.type && (event.data.type == "isVidfrombg")) {
-      var vid = document.getElementsByTagName('video');
-      if (vid.length == 0){
-        window.postMessage({
-          type: "isVidtobg",
-          isVid: false
-        });
-      } else{
-        window.postMessage({
-          type: "isVidtobg",
-          isVid: true
-        });
-      }      
-  }
+
   
 });
 `
@@ -98,10 +101,10 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (request.type == "isVid"){
-      console.log('checking if is vid');
       window.postMessage({
         type: "isVidfrombg"
       });
+      console.log('checking if is vid' + isVid);
       sendResponse({isVid: isVid});
     }
       

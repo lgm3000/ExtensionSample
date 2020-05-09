@@ -3,14 +3,13 @@
 
 'use strict';
 
-var mute = true;
-
 const channel = new BroadcastChannel('sw-messages');
 console.log('Hello from service worker');
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  mute = true;
+
+  let today = new Date();
   if (event.action.startsWith('go to') ) {
     console.log("goto was clicked");
     console.log(event.action);
@@ -19,7 +18,7 @@ self.addEventListener('notificationclick', function(event) {
         clients.matchAll({includeUncontrolled: true,type: 'window'}).then( windowClients => {
             // If not, then open the target URL in a new window/tab.
             if (clients.openWindow) {
-                return clients.openWindow(url);
+                clients.openWindow(url);
             }
         })
     );
@@ -39,9 +38,13 @@ self.addEventListener('notificationclick', function(event) {
   } else if(event.action === 'disable') {
     // Main body of notification was clicked
     console.log("disabling notifications");
-    let today = new Date();
-    // muting notifications for 30 seconds 
-    today.setSeconds( today.getSeconds() + 300);
+    // muting notifications for 30 minutes 
+    today.setSeconds( today.getSeconds() + 1800);
     channel.postMessage({type: 'mute until', val: today});
+    return;
   }
+  today.setSeconds( today.getSeconds() + 300);
+  channel.postMessage({type: 'mute until', val: today});
+  return;
+
 }, false);
