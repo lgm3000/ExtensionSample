@@ -44,6 +44,7 @@ window.addEventListener("message", function(event) {
     Qlist = Qlist.split(',');
   }
   if (event.data.type && (event.data.type == "sendQfrombg")) {
+      console.log(player.getPlaybackQuality());
       window.postMessage({
           type: "sendQtobg",
           cur: player.getPlaybackQuality(),

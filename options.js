@@ -195,7 +195,7 @@ function setArr2(sstr){
 				let ddd = document.createElement('div');
 				let ddddd = document.createElement('div');
 				ddddd.hidden = 1;
-				ddddd.innerHTML = '<img src="images/bday_128.png" style="margin-left:auto;margin-right:auto;display:block; max-width: 30%; max-height: 50%;margin-top:2vh;"</img>'
+				ddddd.innerHTML = '<img src="images/bday_128.png" style="margin-left:auto;margin-right:auto;display:block; max-width: 30%; max-height: 50%;margin-top:2vh;pointer-events:none;"</img>'
 				ddddd.style = "background: #b4f7a8;opacity: 0.5;position:relative;overflow: hidden;border-radius: 1em;height: 100%;width:100%;";
 				ddd.appendChild(ddddd);
 				ddd.className = getColor(arr[wday][item])

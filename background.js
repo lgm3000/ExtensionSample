@@ -42,7 +42,7 @@ const leisureOptions = {
   };
 
 const activityWeight = {
-  'other': 5,
+  'other': 3,
   'nothing': 0,
   'online_gaming': 3,
   'video_streaming': 10,
@@ -121,9 +121,7 @@ function show(addText,swRegistration) {
 		console.log(activeType);
       	if(activeType == 'video_streaming'){
       		// We want to know if we can try lowering the quality of video, but currently only works when the current tab is youtube
-      		refreshVidQuality();
       		if (vidQuality['cur'].startsWith('h')){
-      			console.log("!!!");
       		    options = [
                     {
 						action: "lower",
@@ -198,7 +196,7 @@ function refreshVidQuality(){
 		    chrome.tabs.sendMessage(tabs[0].id, {type: "sendQ"}, function(response) {
     		    console.log(response);
     		});
-    	vidQuality = {cur: 'unknown', ful:'unknown'};
+    	else vidQuality = {cur: 'unknown', ful:'unknown'};
 	});
 }
 
@@ -548,6 +546,15 @@ async function main(){
 							    chrome.browserAction.setIcon({path: "/images/green-19.png"});
 							let p = activityWeight[plan[time]];
 							let q = activityWeight[activeType];
+							if(activeType=='video_streaming'){
+								if(vidQuality.cur=='Unknown' || vidQuality.cur.startsWith('h')){
+									refreshVidQuality();
+								} else {
+								q = q * 0.5;
+						        }
+							}
+							console.log(vidQuality);
+							    
 
 							// Calculating the environmental impact score
 							EnvImp = EnvImp + q * weatherWeight;
