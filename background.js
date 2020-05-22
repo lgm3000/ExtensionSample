@@ -563,7 +563,7 @@ async function main(){
 							console.log("current    plan: " + plan[time]);
 							console.log("current weather: " + getWeather());
 							console.log("active activity: " + activeType);
-							show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
+							// show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
 
 
                             // notification zone
