@@ -28,7 +28,7 @@ function initVars(){
 }
 
 function getForecast(day,range){
-	chrome.storage.sync.get('forecast',function(data){
+	chrome.storage.local.get('forecast',function(data){
 		var tmp;
 		try{
     	    tmp = data.forecast.split(';');
@@ -97,11 +97,11 @@ function refreshSuggestions(day,time){
               stylestr = stylestr + 'opacity: 0.2;';
           var weatherMod = getForecast(day,item);
 		  if(weatherMod>5){
-            sd1.innerHTML = 'Read Books ' + getForecast(day,item);
+            sd1.innerHTML = 'Fossil Fuel';
             sd1.style = stylestr;
             sd2.innerHTML = '<img src="images/redWeather.png" style="display:block; max-width: 100%; max-height: 80%; display: block;object-fit: contain;' + stylestr + '"/>';
 		  }else{
-            sd1.innerHTML = 'do whatever ' + getForecast(day,item);
+            sd1.innerHTML = 'Green Power';
             sd1.style = stylestr;
             sd2.innerHTML = '<img src="images/greenWeather.png" style="display:block; max-width: 100%; max-height: 80%; display: block;object-fit: contain;' + stylestr + '"/>';
 		  }
@@ -125,7 +125,7 @@ function syncActivities(){
 		    		if(timeranges.hasOwnProperty(ttime))
 		    			sstr = sstr + dday + "," + ttime + ":" + arr[dday][ttime] + ";"
 	sstr = sstr.substring(0, sstr.length - 1);
-    chrome.storage.sync.set({'activity': sstr}, function() {
+    chrome.storage.local.set({'activity': sstr}, function() {
 		console.log('is set to ' + sstr);
     })
 }
@@ -138,7 +138,7 @@ function syncScore(){
 		    		if(timeranges.hasOwnProperty(ttime))
 		    			sstr = sstr + dday + "," + ttime + ":" + "0" + ";"
 	sstr = sstr.substring(0, sstr.length - 1);
-    chrome.storage.sync.set({'score': sstr}, function() {
+    chrome.storage.local.set({'score': sstr}, function() {
 		console.log('is set to ' + sstr);
     })
 }
@@ -193,8 +193,10 @@ function setArr2(sstr){
 		    // constructing the content table
 			for (var wday in dayOfWeek){
 				let ddd = document.createElement('div');
-				let ddddd = document.createElement('p');
+				let ddddd = document.createElement('div');
 				ddddd.hidden = 1;
+				ddddd.innerHTML = '<img src="images/bday_128.png" style="margin-left:auto;margin-right:auto;display:block; max-width: 30%; max-height: 50%;margin-top:2vh;"</img>'
+				ddddd.style = "background: #b4f7a8;opacity: 0.5;position:relative;overflow: hidden;border-radius: 1em;height: 100%;width:100%;";
 				ddd.appendChild(ddddd);
 				ddd.className = getColor(arr[wday][item])
 				ddd.setAttribute("att-day",wday);
@@ -318,7 +320,7 @@ initVars();
 function main(){
 	initHeaders();
 	try{
-		chrome.storage.sync.get('activity',function(data){
+		chrome.storage.local.get('activity',function(data){
 			setArr(data.activity);
 		});
 	}
@@ -326,7 +328,7 @@ function main(){
 		setArr(initStr);
 	}
 	try{
-		chrome.storage.sync.get('score',function(data){
+		chrome.storage.local.get('score',function(data){
 			setArr2(data.score);
 		});
 	}
@@ -468,18 +470,24 @@ function main(){
 		}
 	}
 	setInterval(function(){
-		chrome.storage.sync.get('score',function(data){
+		chrome.storage.local.get('score',function(data){
 			setArr2(data.score);
 			[...document.getElementById('content').children].forEach(function(element){
-				var ptag =  element.getElementsByTagName('p')[0];
+				var ptag =  element.getElementsByTagName('div')[0];
 				var envval = arr2[element.getAttribute('att-day')][element.getAttribute('att-time')];
 				var fullScore = 7200 * 2 * getForecast(element.getAttribute('att-day'),element.getAttribute('att-time'));
 				var percent = Math.floor((envval/fullScore) * 100) + '%';
 				if (envval > 0){
 					ptag.hidden = 0;
-					ptag.innerHTML = percent;
-					var icol = (envval > fullScore * 0.6)?"red":"green";
-					ptag.style.color = icol;
+					if(getForecast(element.getAttribute('att-day'),element.getAttribute('att-time')) < 6) ptag.hidden = 1;
+					if(arr[element.getAttribute('att-day')][element.getAttribute('att-time')]=='disabled') ptag.style.opacity = 0.2; else ptag.style.opacity = 0.5;
+					// Debugging 
+					if (false){
+					    ptag.innerHTML = percent;
+					    ptag.style.color = (envval > fullScore * 0.6)?"red":"green";
+					}else{
+						//ptag.innerHTML = '<img src="images/redWeather.png" style="display:block; max-width: 100%; max-height: 80%; display: block;object-fit: contain;max-width:50%;max-height:50%;vertical-align: middle;"</img>'
+					}
 				}else{
 					ptag.hidden = 1;
 				}

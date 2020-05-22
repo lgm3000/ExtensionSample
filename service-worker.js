@@ -43,8 +43,6 @@ self.addEventListener('notificationclick', function(event) {
     channel.postMessage({type: 'mute until', val: today});
     return;
   }
-  today.setSeconds( today.getSeconds() + 300);
-  channel.postMessage({type: 'mute until', val: today});
   return;
 
 }, false);

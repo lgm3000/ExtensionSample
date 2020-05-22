@@ -1,5 +1,6 @@
 // Copyright 2020 Max Wang.
 // This source code is free-for-all.
+// I live in constant fear that decimal commas will devastate this code
 
 'use strict';
 
@@ -62,7 +63,7 @@ const notificationInterval =   Math.floor(
 const BEnvA = 2;
 
 // define the size / length of the activity FIFO stack
-const actStackLength = 2;
+const actStackLength = 3;
                             
 /*****************************************************************************************/
 
@@ -76,9 +77,11 @@ var EnvImp = 0; // Env. Impact Score (BEnv Score)
 var BEnvImp = 0; // Behavior-offset Env. Impact Score (BEnv Score)
 var forecast = {};
 var arr2 = {};
+var notArr = {};
 for(var i in dayOfWeek){
 	forecast[i] = {};
 	arr2[i] = {};
+	notArr[i] = {};
 	}
 var fset = false;
 var rset = false;
@@ -90,6 +93,8 @@ var siteOptions = {};
 siteOptions['green'] = ['reddit.com'];
 siteOptions['red'] = ['youtube.com'];
 //export {EnvImp,BEnvImp};
+
+var currentTab;
 
 const forecastInit = '5,t1:9;5,t2:7;5,t3:8;5,t4:7;5,t5:6;5,t6:5;5,t7:5;5,t8:5;6,t1:2;6,t2:8;6,t3:3;6,t4:7;6,t5:9;6,t6:3;6,t7:3;6,t8:2;0,t1:3;0,t2:4;0,t3:4;0,t4:4;0,t5:4;0,t6:4;0,t7:4;0,t8:3;1,t1:5;1,t2:6;1,t3:6;1,t4:5;1,t5:6;1,t6:7;1,t7:7;1,t8:7;2,t1:6;2,t2:6;2,t3:6;2,t4:5;2,t5:6;2,t6:5;2,t7:5;2,t8:5;3,t1:5;3,t2:5;3,t3:6;3,t4:6;3,t5:6;3,t6:5;3,t7:5;3,t8:4;4,t1:5;4,t2:6;4,t3:7;4,t4:7;4,t5:7;4,t6:7;4,t7:7;4,t8:7';
 
@@ -115,7 +120,7 @@ function show(addText,swRegistration) {
 	if(!(today < muteUntil)){
 		console.log(activeType);
       	if(activeType == 'video_streaming'){
-      		// We want to know if we can try lowering the quality of video, but only if the current tab is youtube
+      		// We want to know if we can try lowering the quality of video, but currently only works when the current tab is youtube
       		refreshVidQuality();
       		if (vidQuality['cur'].startsWith('h')){
       			console.log("!!!");
@@ -129,40 +134,44 @@ function show(addText,swRegistration) {
 						title: "mute notifications"
 					}
 				];
+				addText = addText + " Try lowering your video quality!";
       		} else {
       			options = [
 					{
 						action: "reset to " + greensite,
-						title: "go to " + greensite
+						title: "Be Inspired!"
 					},
 					{
 						action: "disable",
 						title: "mute notifications"
 					}
 				];
+				addText = addText + " Check out some environment-friendly sites!";
       		}
   	    } else{
   	        options = [
 					{
-						action: "go to " + greensite,
-						title: "go to " + greensite
+						action: "reset to " + greensite,
+						title: "Be Inspired!"
 					},
 					{
 						action: "disable",
 						title: "mute notifications"
 					}
 				];
+			addText = addText + " Check out some environment-friendly sites!";
   	    }
   	    var time = /(..)(:..)/.exec(today);     // The prettyprinted time.
 		var hour = time[1] % 12 || 12;               // The prettyprinted hour.
 		var period = time[1] < 12 ? 'a.m.' : 'p.m.'; // The period of the day.
 		swRegistration.showNotification(hour + time[2] + ' ' + period, {
-					icon: 'images/128.png',
+					icon: 'images/redWeather.png',
 					body: addText,
 					actions: options
 				});
 		var muteU = new Date();
-		muteU.setSeconds(muteU.getSeconds() + 1)
+		notArr[getCurDay()][getCurTime()][0] = Number(notArr[getCurDay()][getCurTime()][0]) + 1;
+		muteU.setSeconds(muteU.getSeconds() + 300);
 		muteNotification(muteU);
     }
 	
@@ -218,6 +227,19 @@ function setScoreArr(sstr){
     	});
 	}
 }
+function setNotArr(sstr){
+	if(sstr == null)
+	    for(var i in dayOfWeek)
+	        for(var j in timeranges)
+	            notArr[i][j] = [0,0,0,0];
+	else{
+		console.log(sstr);
+		console.log(notArr);
+	    sstr.split(';').forEach(function(item){
+    		notArr[item.split(':')[0].split(',')[0]][item.split(':')[0].split(',')[1]] = item.split(':')[1].split(',');
+    	});
+	}
+}
 function syncScore(){
 	var sstr = "";
 	    for (var dday in dayOfWeek) 
@@ -232,7 +254,22 @@ function syncScore(){
 		    		}
 		    			
 	sstr = sstr.substring(0, sstr.length - 1);
-    chrome.storage.sync.set({'score': sstr}, function() {
+    chrome.storage.local.set({'score': sstr}, function() {
+    })
+}
+function syncNotification(){
+	var sstr = "";
+	    for (var dday in dayOfWeek) 
+		    if(dayOfWeek.hasOwnProperty(dday))
+		    	for (var ttime in timeranges) 
+		    		if(timeranges.hasOwnProperty(ttime)){
+		    			if(notArr[dday][ttime].length!=4) notArr[dday][ttime] = [0,0,0,0];
+		    			for(var i = 0;i<4;i++) if(isNaN(notArr[dday][ttime][i])) notArr[dday][ttime][i] = 0;
+		    			sstr = sstr + dday + "," + ttime + ":" + notArr[dday][ttime].join(',') +  ";";		    			
+		    		}
+		    			
+	sstr = sstr.substring(0, sstr.length - 1);
+    chrome.storage.local.set({'notinfo': sstr}, function() {
     })
 }
 
@@ -245,7 +282,7 @@ function syncScore(){
 function muteNotification(data){
 	console.log('Mute notifications until:' + data);
 	var h = Date.parse(data).toString();
-  	//chrome.storage.sync.set({'mute':h},function(){});
+  	//chrome.storage.local.set({'mute':h},function(){});
   	muteUntil = h > muteUntil? h:muteUntil;
 }
 
@@ -270,7 +307,7 @@ function pullForecast(){
 		sstr = forecastInit + ';';
 	}
 	sstr = sstr.substring(0, sstr.length - 1);
-    chrome.storage.sync.set({'forecast': sstr}, function() {fset = true;});
+    chrome.storage.local.set({'forecast': sstr}, function() {fset = true;});
 }
 
 function getWeather(){
@@ -284,7 +321,7 @@ function getWeather(){
 }
 
 function getForecast(day,range){
-	chrome.storage.sync.get('forecast',function(data){
+	chrome.storage.local.get('forecast',function(data){
 		var tmp;
 		try{
     	    tmp = data.forecast.split(';');
@@ -311,6 +348,18 @@ function isBetween(timePeriod){
     let today = new Date();
     let curDate = Date.parse('01/01/2000 ' + today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds())
     return curDate > startDate && curDate <= endDate;
+}
+function getCurDay(){
+	let now = new Date();
+	return (now.getDay() + 6) % 7;
+}
+function getCurTime(){
+	for (var time in timeranges) 
+	    if(timeranges.hasOwnProperty(time)){
+			if (isBetween(timeranges[time])){
+                return time;
+			}
+	    }
 }
 function getAct(arr){
 	var max = 0;
@@ -349,15 +398,25 @@ channel.addEventListener('message', event => {
   if(event.data.type == 'mute until'){
   	console.log(event.data.val);
   	muteNotification(event.data.val);
+  	notArr[getCurDay()][getCurTime()][3] = Number(notArr[getCurDay()][getCurTime()][3]) + 1;
   }
   if(event.data.type == 'resetpage'){
-    chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
-      chrome.tabs.update(tabs[0].id, {url: event.data.val});
-	});
+    if(currentTab == null)
+        window.open(event.data.val);
+    else
+        chrome.tabs.update(currentTab.id, {url: event.data.val});
+    notArr[getCurDay()][getCurTime()][1] = Number(notArr[getCurDay()][getCurTime()][1]) + 1;
+    let today = new Date();
+	today.setSeconds(today.getSeconds() + 3600);
+    muteNotification(today);
   }   
   if(event.data.type == 'lower'){
   	console.log(event.data.val);
     lowerVidQuality();
+    notArr[getCurDay()][getCurTime()][2] = Number(notArr[getCurDay()][getCurTime()][2]) + 1;
+    let today = new Date();
+    today.setSeconds(today.getSeconds() + 3600);
+    muteNotification(today);
   }   
 });
 
@@ -388,8 +447,8 @@ chrome.runtime.onMessage.addListener(
           if(siteOptions[request.col].length>4)
               siteOptions[request.col].pop();
           var nameval = request.col + 'sites';
-          chrome.storage.sync.set({'redsites': siteOptions['red']});
-          chrome.storage.sync.set({'greensites': siteOptions['green']});
+          chrome.storage.local.set({'redsites': siteOptions['red']});
+          chrome.storage.local.set({'greensites': siteOptions['green']});
       }
 
 });
@@ -404,14 +463,21 @@ async function main(){
 		pullForecast();
 	}
     try{
-		chrome.storage.sync.get('score',function(data){
+		chrome.storage.local.get('score',function(data){
 			setScoreArr(data.score);
 		});
 	}
 	catch(error){
 		setScoreArr();
 	}
-
+    try{
+		chrome.storage.local.get('notinfo',function(data){
+			setNotArr(data.notinfo);
+		});
+	}
+	catch(error){
+		setNotArr();
+	}
     const swRegistration = await registerServiceWorker();
 
 	// Checks weather status every x seconds.
@@ -421,8 +487,10 @@ async function main(){
 
 	setInterval(function(){
 		syncScore();
+		syncNotification();
+		console.log(notArr);
 		// Pulling user planning from storage
-		chrome.storage.sync.get('activity',function(data){
+		chrome.storage.local.get('activity',function(data){
 			let now = new Date();
 			let today = (now.getDay() + 6) % 7;
 			let tmp = data.activity.split(';');
@@ -447,6 +515,8 @@ async function main(){
 					        console.log("defaulting activity");
 					        actStack.unshift("other");
 				        }
+				        if(tabs[0]!=null)
+				            currentTab = tabs[0];
 					});
 				} catch(error){
 					console.log("defaulting activity");
@@ -493,7 +563,7 @@ async function main(){
 							console.log("current    plan: " + plan[time]);
 							console.log("current weather: " + getWeather());
 							console.log("active activity: " + activeType);
-							//show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
+							show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
 
 
                             // notification zone
@@ -506,7 +576,7 @@ async function main(){
 								if (plan[time] == activeType) {
 									// if act = plan, then mildly suggest change when wheather is bad
 									if(weatherWeight > 5){
-										notStr = 'Thanks for sticking to your plan! ('+activeType+')\n' +  'However, you can consider changing your plan to something more eco-friendly!';
+										notStr = 'Thanks for sticking to your plan! However, you can consider changing your plan to something more eco-friendly!';
 										show(notStr,swRegistration);
 										
 									}
@@ -519,7 +589,7 @@ async function main(){
 									// if act != plan, then strongly suggest change when current activity is bad & wheather is bad
 									if(getWeather() > 5){
 										if(activityWeight[activeType]> 5){
-										    notStr = 'You shouldn\'t be doing ' + activeType + ' at this time! Consider sticking to your plan!';
+										    notStr = 'Energy is mostly generated by fossil fuel at this time!';
 										    show(notStr,swRegistration);
 										}else{
 											notStr = 'Doing '+activeType+' during bad weather is great!';
