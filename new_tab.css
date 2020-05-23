@@ -63,11 +63,11 @@
 }
 
 .dspcontent > div {
-    margin: auto auto;  
+    margin: auto auto;
     box-shadow: inset 1px 0 0 #ECEFF1, inset 0 1px 0 0 #ECEFF1;
     width: 75%;
-    height: 0;
-    padding-bottom:55%;
+    height: 70%;
+    padding-bottom: 0;
 }
 
 .accent-box {
@@ -93,12 +93,20 @@
 .accent-empty {
   display: -webkit-box;
   border-radius:1em;
-  background: rgba(70, 70, 70, 0.5);
+  background: rgba(70, 70, 70, 0.44);
   -webkit-transition: .2s ease box-shadow, .2s ease transform;
   transition: .2s ease box-shadow, .2s ease transform;
   transition: .5s;
 }
-.accent-disabled {
+.accent-disabled-green {
+  display: -webkit-box;
+  border-radius:1em;
+  background: #b1e6be45;
+  -webkit-transition: .2s ease box-shadow, .2s ease transform;
+  transition: .2s ease box-shadow, .2s ease transform;
+  transition: .5s;
+}
+.accent-disabled-empty {
   display: -webkit-box;
   border-radius:1em;
   background: rgba(20, 20, 20, 0.1);
@@ -109,7 +117,7 @@
 .accent-green {
   display: -webkit-box;
   border-radius:1em;
-  background: #bcee8e;
+  background: #8df1a5;
   -webkit-transition: .2s ease box-shadow, .2s ease transform;
   transition: .2s ease box-shadow, .2s ease transform;
   transition: .5s;

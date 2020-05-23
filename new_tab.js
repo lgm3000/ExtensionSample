@@ -26,6 +26,25 @@ function getWeather(day,time){
 
 }
 
+function setArr2(sstr){
+	if(sstr == null)
+	    for(var i in dayOfWeek)
+	        for(var j in timeranges)
+	            arr2[i][j] = 0;
+	else{
+	    sstr.split(';').forEach(function(item){
+    		arr2[item.split(':')[0].split(',')[0]][item.split(':')[0].split(',')[1]] = Number(item.split(':')[1]);
+    	});
+	}
+}
+
+function getForecast(type,val){
+	var sstr = "accent-";
+	if(type =='disabled') sstr = sstr + 'disabled-';
+    if(val > 5) return sstr + 'empty';
+    else return sstr + 'green';
+}
+
 function updateRecs(weathermod){
 	if(weathermod > 5){
 			// put down red sites
@@ -60,6 +79,9 @@ function updateRecs(weathermod){
 }
 
 var arr = {};
+var arr2 = {};
+var forecast = {};
+var fset = false;
 const initStr = "0,t1:online_gaming;0,t2:nothing;0,t3:nothing;0,t4:nothing;0,t5:nothing;0,t6:nothing;0,t7:nothing;0,t8:nothing;1,t1:nothing;1,t2:nothing;1,t3:nothing;1,t4:nothing;1,t5:nothing;1,t6:nothing;1,t7:nothing;1,t8:nothing;2,t1:nothing;2,t2:nothing;2,t3:nothing;2,t4:nothing;2,t5:nothing;2,t6:nothing;2,t7:nothing;2,t8:nothing;3,t1:nothing;3,t2:nothing;3,t3:nothing;3,t4:nothing;3,t5:nothing;3,t6:nothing;3,t7:nothing;3,t8:nothing;4,t1:nothing;4,t2:nothing;4,t3:nothing;4,t4:nothing;4,t5:nothing;4,t6:nothing;4,t7:nothing;4,t8:nothing;5,t1:nothing;5,t2:nothing;5,t3:nothing;5,t4:nothing;5,t5:nothing;5,t6:nothing;5,t7:nothing;5,t8:nothing;6,t1:nothing;6,t2:nothing;6,t3:nothing;6,t4:nothing;6,t5:nothing;6,t6:nothing;6,t7:nothing;6,t8:nothing";
 
 function getSites(){
@@ -145,8 +167,18 @@ function constructTable(timeranges) {
 		    // constructing the content table
 			for (var wday in dayOfWeek){
 				let ddd = document.createElement('div');
-				ddd.className = getColor(arr[wday][item]);
+				ddd.className = getForecast(arr[wday][item],forecast[wday][item]);//getColor(arr[wday][item]);
+				
 				ddd.oncontextmenu= function(){console.log(this.className); return false;};
+				let fullScore = 7200 * 2 * forecast[wday][item];
+				let envval = arr2[wday][item];
+				if (envval > 0 && arr[wday][item]!='disabled' && forecast[wday][item] > 5 && envval < fullScore){
+					let ddddd = document.createElement('div');
+				    //ddddd.innerHTML = '<img src="images/bday_128.png" style="margin-left:auto;margin-right:auto;display:block; max-width: 30%; max-height: 50%;margin-top:1vh;pointer-events:none;"</img>'
+				    ddddd.innerHTML = '&#' + (128000 + (7 * Number(wday) + Number(item[1]) )%61);
+				    ddddd.style = "opacity: 0.7;height: 100%;width:100%;justify-content: center;display:flex;align-items:center;font-size:large;";
+				    ddd.appendChild(ddddd);
+				}
 				document.getElementById('dspgridgrid').appendChild(ddd);
 			}
 		}
@@ -172,11 +204,14 @@ window.onload = function(){
 
 async function init(){
 	
-	for(var i in dayOfWeek)
+	for(var i in dayOfWeek){
 	    arr[i] = {};
+	    arr2[i] = {};
+	    forecast[i] = {};
+	}
 	let prom = new Promise((resolve,reject) =>{
 		try{
-			chrome.storage.local.get('activity',function(data){
+			chrome.storage.local.get(['activity','score','forecast'],function(data){
 				resolve(data);
 			});
 		}
@@ -189,11 +224,14 @@ async function init(){
 	console.log('done');
 	console.log(result);
 	setArr(result.activity);
+	setArr2(result.score);
+	var tmp = result.forecast.split(';');
+	tmp.forEach(function(item){
+    		forecast[item.split(':')[0].split(',')[0]][item.split(':')[0].split(',')[1]] = item.split(':')[1];
+    	});
 	getSites();
     constructTable(timeranges);
     showTime();
 }
-
-
 
 initVars();

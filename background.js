@@ -11,7 +11,7 @@
 // the time needs to be in format HH:MM-HH:MM
 
 const timeranges = {
-  't1':'00:00-10:00',
+  't1':'08:00-10:00',
   't2':'10:00-12:00',
   't3':'12:00-14:00',
   't4':'14:00-16:00',
@@ -117,7 +117,7 @@ function show(addText,swRegistration) {
 	var options = [];
 	console.log(siteOptions);
 	var greensite = siteOptions['green'][Math.floor(Math.random() * 100) % siteOptions['green'].length];
-	if(!(today < muteUntil)){
+	if(!(Date.parse(today) < muteUntil)){
 		console.log(activeType);
       	if(activeType == 'video_streaming'){
       		// We want to know if we can try lowering the quality of video, but currently only works when the current tab is youtube
@@ -192,10 +192,13 @@ async function registerServiceWorker() {
 function refreshVidQuality(){
     chrome.tabs.query({active: true,currentWindow: true}, function(tabs) {
     	console.log(tabs[0].url);
-    	if(tabs[0].url.includes("youtube.com"))
+    	if(tabs[0]!=null){
+    		if(tabs[0].url.includes("youtube.com"))
 		    chrome.tabs.sendMessage(tabs[0].id, {type: "sendQ"}, function(response) {
     		    console.log(response);
     		});
+    		else vidQuality = {cur: 'unknown', ful:'unknown'};
+    	}
     	else vidQuality = {cur: 'unknown', ful:'unknown'};
 	});
 }
@@ -279,7 +282,7 @@ function syncNotification(){
 // actual data
 function muteNotification(data){
 	console.log('Mute notifications until:' + data);
-	var h = Date.parse(data).toString();
+	var h = Date.parse(data);
   	//chrome.storage.local.set({'mute':h},function(){});
   	muteUntil = h > muteUntil? h:muteUntil;
 }
@@ -405,7 +408,7 @@ channel.addEventListener('message', event => {
         chrome.tabs.update(currentTab.id, {url: event.data.val});
     notArr[getCurDay()][getCurTime()][1] = Number(notArr[getCurDay()][getCurTime()][1]) + 1;
     let today = new Date();
-	today.setSeconds(today.getSeconds() + 3600);
+	today.setSeconds(today.getSeconds() + 1800);
     muteNotification(today);
   }   
   if(event.data.type == 'lower'){
@@ -413,7 +416,7 @@ channel.addEventListener('message', event => {
     lowerVidQuality();
     notArr[getCurDay()][getCurTime()][2] = Number(notArr[getCurDay()][getCurTime()][2]) + 1;
     let today = new Date();
-    today.setSeconds(today.getSeconds() + 3600);
+    today.setSeconds(today.getSeconds() + 1800);
     muteNotification(today);
   }   
 });
@@ -487,6 +490,8 @@ async function main(){
 		syncScore();
 		syncNotification();
 		console.log(notArr);
+		let muuu = new Date(muteUntil);
+		console.log(muuu);
 		// Pulling user planning from storage
 		chrome.storage.local.get('activity',function(data){
 			let now = new Date();
@@ -547,8 +552,8 @@ async function main(){
 							let p = activityWeight[plan[time]];
 							let q = activityWeight[activeType];
 							if(activeType=='video_streaming'){
+								refreshVidQuality();
 								if(vidQuality.cur=='Unknown' || vidQuality.cur.startsWith('h')){
-									refreshVidQuality();
 								} else {
 								q = q * 0.5;
 						        }
@@ -570,7 +575,7 @@ async function main(){
 							console.log("current    plan: " + plan[time]);
 							console.log("current weather: " + getWeather());
 							console.log("active activity: " + activeType);
-							// show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
+							show('Hey, your current activity type is ' + activeType + ', plan is ' + plan[time],swRegistration);
 
 
                             // notification zone
